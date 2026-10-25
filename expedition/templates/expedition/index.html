@@ -1,0 +1,543 @@
+{% load static %}
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Монолит Адыгеи — Лаго-Наки</title>
+    <link rel="stylesheet" href="{% static 'expedition/styles.css' %}?v=ux-practicum-20261025">
+</head>
+<body>
+    <a class="skip-link" href="#screen-lago">Перейти к экспедиции</a>
+
+    <section class="onboarding" id="onboarding" aria-labelledby="onboarding-title">
+        <div class="onboarding-card">
+            <p class="onboarding-eyebrow">Интерактивный учебный маршрут</p>
+            <h1 id="onboarding-title">Монолит Адыгеи</h1>
+            <p class="onboarding-lead">Научитесь замечать признаки карста, оползней и обвалов, а затем подберите меры защиты для опасных участков.</p>
+            <dl class="onboarding-facts">
+                <div><dt>Формат</dt><dd>5 этапов с обратной связью</dd></div>
+                <div><dt>Время</dt><dd>8–12 минут</dd></div>
+                <div><dt>Результат</dt><dd>Сертификат и личная статистика</dd></div>
+            </dl>
+            <p class="onboarding-progress" id="onboarding-progress" aria-live="polite"></p>
+            <div class="onboarding-actions">
+                <button class="primary-action" id="start-expedition" type="button">Начать экспедицию</button>
+                <button class="secondary-action" id="resume-expedition" type="button" hidden>Продолжить</button>
+            </div>
+            <p class="onboarding-note">Прогресс хранится только в этом браузере. Его можно сбросить после прохождения.</p>
+        </div>
+    </section>
+
+    <main class="expedition-track" id="expedition-track">
+        <section class="location-screen expedition-screen screen-lago"
+                 id="screen-lago"
+                 data-location="Лаго-Наки"
+                 data-topic="карстовая опасность, растворимые породы и вода на плато Лаго-Наки"
+                 data-required="3"
+                 data-storage-key="geoshield-lago-complete"
+                 data-completion="Отлично! Вы обнаружили все признаки повышения геологической опасности."
+                 data-next-target="#screen-kamennomostsky"
+                 style="background-image: url('{% static 'images/loca1.png' %}');"
+                 aria-label="Локация Лаго-Наки">
+            <div class="weather-tint" aria-hidden="true"></div>
+
+            <header class="scene-hud fade-in">
+                <div class="location-stack">
+                    <section class="location-gallery" aria-label="Галерея Плато Лаго-Наки">
+                        <div class="gallery-track" id="gallery-track">
+                            <img src="{% static 'images/LagoNaki1.png' %}" alt="Скалы и луга Лаго-Наки" class="is-active">
+                            <img src="{% static 'images/LagoNaki2.png' %}" alt="Цветущие склоны Лаго-Наки">
+                            <img src="{% static 'images/LagoNaki3.png' %}" alt="Панорама плато Лаго-Наки">
+                            <img src="{% static 'images/LagoNaki4.png' %}" alt="Снежники на плато Лаго-Наки">
+                        </div>
+                        <button class="gallery-nav gallery-prev" type="button" aria-label="Предыдущее фото">◀</button>
+                        <button class="gallery-nav gallery-next" type="button" aria-label="Следующее фото">▶</button>
+                        <div class="gallery-caption">
+                            <span>Плато Лаго-Наки</span>
+                        </div>
+                    </section>
+
+                    <nav class="route-map" data-stage="1" aria-label="Маршрут экспедиции">
+                        <div class="route-line" aria-hidden="true">
+                            <span class="route-fill" id="route-fill"></span>
+                            <span class="route-marker" id="route-marker"></span>
+                        </div>
+                        <ol>
+                            <li class="is-active"><span>1</span></li>
+                            <li><span>2</span></li>
+                            <li><span>3</span></li>
+                            <li><span>4</span></li>
+                            <li><span>5</span></li>
+                        </ol>
+                    </nav>
+                </div>
+
+                <div class="task-chip">
+                    Найди факторы, влияющие на геологическую безопасность Лаго-Наки
+                </div>
+
+                <div class="sign-counter" aria-live="polite" aria-label="Счётчик найденных признаков">
+                    <span class="counter-orb" aria-hidden="true"></span>
+                    <strong id="found-count" class="found-count">0/3</strong>
+                </div>
+            </header>
+
+            <svg class="hotspot-layer svg-hotspot-layer" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice" aria-label="Интерактивные зоны на изображении">
+                <svg class="hotspot svg-hotspot" tabindex="0" role="button" data-kind="correct" data-label="Активная циркуляция воды" data-icon="≈" data-feedback="Когда вода активно уходит в трещины, она подтачивает породу снизу. Так растет риск воронок и просадок." aria-label="Активная циркуляция воды" x="340" y="600" width="471" height="476" viewBox="0 0 471 476">
+                    <path class="svg-hotspot-shape" d="M5.5 474.981V433.981C21.1667 428.148 53.7 416.081 58.5 414.481C63.3 412.881 92.1667 406.148 106 402.981C116.167 394.815 136.5 374.881 136.5 360.481C136.5 346.081 136.5 304.481 136.5 285.481L234 260.481C225.5 245.481 207.4 214.981 203 212.981C197.5 210.481 162.5 182.981 168.5 159.981C174.5 136.981 176 117.481 168.5 111.981C161 106.481 163.5 74.9813 168.5 71.4813C172.5 68.6813 213.833 48.648 234 38.9813L272.5 7.98132L259 60.9813H369L361 111.981L397 117.981V177.481L328.5 222.981H429.5L467 252.481C459.833 265.315 443.9 291.981 437.5 295.981C431.1 299.981 375.5 343.981 348.5 365.481L377.5 408.981L249.5 457.981L195.5 474.981H0"/>
+                    <circle class="svg-hotspot-marker" cx="236" cy="238" r="25"/>
+                    <text class="svg-hotspot-symbol svg-symbol-correct" x="236" y="247">✓</text>
+                    <text class="svg-hotspot-symbol svg-symbol-wrong" x="236" y="247">×</text>
+                </svg>
+                <svg class="hotspot svg-hotspot" tabindex="0" role="button" data-kind="correct" data-label="Известняк" data-icon="◒" data-feedback="Известняк легко растворяется водой. Поэтому внутри массива могут образовываться пустоты, воронки и пещеры." aria-label="Известняк" x="1029" y="339" width="670" height="204" viewBox="0 0 670 204">
+                    <path class="svg-hotspot-shape" d="M54.2019 139.594L6.7019 200.094C106.035 190.26 308.902 169.794 325.702 166.594C346.702 162.594 645.202 139.594 660.202 139.594C672.202 139.594 665.202 115.26 660.202 103.094L636.702 66.5937L571.702 23.0936L488.702 3.09363L412.702 23.0936L353.702 45.5936C329.869 53.5936 279.902 68.9937 270.702 66.5937C261.502 64.1937 242.535 73.2603 234.202 78.0937L159.702 93.0937L130.202 103.094L54.2019 139.594Z"/>
+                    <circle class="svg-hotspot-marker" cx="335" cy="102" r="25"/>
+                    <text class="svg-hotspot-symbol svg-symbol-correct" x="335" y="111">✓</text>
+                    <text class="svg-hotspot-symbol svg-symbol-wrong" x="335" y="111">×</text>
+                </svg>
+                <svg class="hotspot svg-hotspot" tabindex="0" role="button" data-kind="correct" data-label="Карстовые формы рельефа" data-icon="⌁" data-feedback="Воронки и пещеры - это видимые признаки карста. Если они есть, значит под землей уже идут процессы, опасные для устойчивости поверхности." aria-label="Карстовые формы рельефа" x="1101" y="746" width="445" height="250" viewBox="0 0 445 250">
+                    <path class="svg-hotspot-shape" d="M20.6738 227.331L88.1738 240.331L106.174 245.831C122.674 235.665 155.674 214.131 155.674 209.331C155.674 203.331 149.674 188.331 160.674 193.831C171.674 199.331 312.174 180.831 348.674 175.331C377.874 170.931 421.84 146.498 440.174 134.831C440.84 116.331 441.774 77.4313 440.174 69.8313C438.574 62.2313 397.507 47.6646 377.174 41.3313C347.507 29.8313 286.974 6.13135 282.174 3.33135C277.374 0.531353 199.174 16.1647 160.674 24.3314C130.174 40.3314 64.4738 73.7314 45.6738 79.3314C26.8738 84.9314 16.5072 108.331 13.6738 119.331L28.1738 140.831C46.1738 150.665 84.8738 171.331 95.6738 175.331C109.174 180.331 56.1738 178.831 45.6738 180.831C37.2738 182.431 14.5072 193.498 4.17383 198.831L20.6738 227.331Z"/>
+                    <circle class="svg-hotspot-marker" cx="222" cy="125" r="25"/>
+                    <text class="svg-hotspot-symbol svg-symbol-correct" x="222" y="134">✓</text>
+                    <text class="svg-hotspot-symbol svg-symbol-wrong" x="222" y="134">×</text>
+                </svg>
+                <svg class="hotspot svg-hotspot" tabindex="0" role="button" data-kind="wrong" data-label="Деревья" data-icon="•" data-feedback="Дерево может скрыть воронку, но не образует ее. Причина опасности - порода и вода, а не растительность." aria-label="Деревья" x="295" y="529" width="158" height="166" viewBox="0 0 158 166">
+                    <path class="svg-hotspot-shape" d="M153.468 142.706L18.968 162.706L3.46802 142.706L18.968 107.706L39.968 54.7064L73.968 94.7064V54.7064L115.968 6.20642L153.468 142.706Z"/>
+                    <circle class="svg-hotspot-marker" cx="79" cy="83" r="25"/>
+                    <text class="svg-hotspot-symbol svg-symbol-correct" x="79" y="92">✓</text>
+                    <text class="svg-hotspot-symbol svg-symbol-wrong" x="79" y="92">×</text>
+                </svg>
+                <svg class="hotspot svg-hotspot" tabindex="0" role="button" data-kind="wrong" data-label="Туристические знаки" data-icon="•" data-feedback="Туристический знак просто показывает маршрут. Он помогает ориентироваться, но не является причиной карста и не влияет на устойчивость пород." aria-label="Туристические знаки" x="1599" y="725" width="316" height="334" viewBox="0 0 316 334">
+                    <path class="svg-hotspot-shape" d="M4.18872 159.762L93.1887 206.262L70.6887 287.762L158.189 330.262L314.189 303.762V117.262L287.689 3.76233L56.6887 70.7623L4.18872 159.762Z"/>
+                    <circle class="svg-hotspot-marker" cx="158" cy="167" r="25"/>
+                    <text class="svg-hotspot-symbol svg-symbol-correct" x="158" y="176">✓</text>
+                    <text class="svg-hotspot-symbol svg-symbol-wrong" x="158" y="176">×</text>
+                </svg>
+                <svg class="hotspot svg-hotspot" tabindex="0" role="button" data-kind="wrong" data-label="Облака / осадки" data-icon="☁" data-feedback="Облака - нет. Дождь и снег - косвенно да: они дают воду, которая растворяет известняк и уходит под землю." aria-label="Облака и осадки" x="-1" y="18" width="1911" height="331" viewBox="0 0 1911 331">
+                    <path class="svg-hotspot-shape" d="M32.5 130.5L2.5 175L32.5 3H1908V280L1808 308H1633.5L1498 280H1409.5L1287.5 327L1115.5 227.5L1038 247L935.5 213.5L800 247L622.5 158H539.5H423.5L282 191.5L265.5 94.5L154.5 191.5L32.5 130.5Z"/>
+                    <circle class="svg-hotspot-marker" cx="956" cy="166" r="25"/>
+                    <text class="svg-hotspot-symbol svg-symbol-correct" x="956" y="175">✓</text>
+                    <text class="svg-hotspot-symbol svg-symbol-wrong" x="956" y="175">×</text>
+                </svg>
+            </svg>
+
+            <aside class="field-expert" aria-live="polite">
+                <img class="field-expert-image"
+                     src="{% static 'images/geo.png' %}"
+                     data-idle-src="{% static 'images/geo.png' %}"
+                     data-true-src="{% static 'images/geo_true.png' %}"
+                     alt="Геолог-эксперт экспедиции">
+                <div class="feedback-card character-feedback" id="feedback-card" aria-hidden="true">
+                    <div>
+                        <strong id="feedback-title" class="feedback-title"></strong>
+                        <p id="feedback-text" class="feedback-text"></p>
+                    </div>
+                </div>
+            </aside>
+
+            <button class="continue-button" id="continue-button" type="button" data-next-target="#screen-kamennomostsky">
+                <span>Продолжить экспедицию</span>
+                <span class="continue-arrow" aria-hidden="true">→</span>
+            </button>
+
+        </section>
+
+        <section class="location-screen expedition-screen screen-kamennomostsky"
+                 id="screen-kamennomostsky"
+                 data-location="Каменномостский"
+                 data-topic="признаки начинающегося оползня"
+                 data-required="3"
+                 data-storage-key="geoshield-kamennomostsky-complete"
+                 data-completion="Отлично! Вы обнаружили все признаки возможного оползня."
+                 style="background-image: url('{% static 'images/loca2.png' %}?v=loca2-20260621-153949');"
+                 aria-label="Локация Каменномостский">
+            <div class="weather-tint screen2-tint" aria-hidden="true"></div>
+
+            <header class="scene-hud fade-in">
+                <div class="location-stack">
+                    <section class="location-gallery" aria-label="Галерея Каменномостского">
+                        <div class="gallery-track">
+                            <img src="{% static 'images/kam.png' %}" alt="Каменномостский, вид на склон" class="is-active">
+                            <img src="{% static 'images/kam1.png' %}" alt="Каменномостский, горный ландшафт">
+                            <img src="{% static 'images/kam2.png' %}" alt="Каменномостский, маршрут экспедиции">
+                            <img src="{% static 'images/kam3.png' %}" alt="Каменномостский, природная зона">
+                        </div>
+                        <button class="gallery-nav gallery-prev" type="button" aria-label="Предыдущее фото">◀</button>
+                        <button class="gallery-nav gallery-next" type="button" aria-label="Следующее фото">▶</button>
+                        <div class="gallery-caption">
+                            <span>Каменномостский</span>
+                        </div>
+                    </section>
+
+                    <nav class="route-map route-map-stage-2" data-stage="2" aria-label="Маршрут экспедиции">
+                        <div class="route-line" aria-hidden="true">
+                            <span class="route-fill"></span>
+                            <span class="route-marker"></span>
+                        </div>
+                        <ol>
+                            <li class="is-complete"><span>1</span></li>
+                            <li class="is-active"><span>2</span></li>
+                            <li><span>3</span></li>
+                            <li><span>4</span></li>
+                            <li><span>5</span></li>
+                        </ol>
+                    </nav>
+                </div>
+
+                <div class="task-chip screen2-task-chip">
+                    После сильных дождей жители заметили изменения на склоне. Отметь признаки, которые могут указывать на начало оползневого процесса и требуют сообщения ответственным службам
+                </div>
+
+                <div class="sign-counter screen2-counter" aria-live="polite" aria-label="Счётчик найденных признаков">
+                    <span class="counter-orb" aria-hidden="true"></span>
+                    <strong class="found-count">0/3</strong>
+                </div>
+            </header>
+
+            <svg class="hotspot-layer svg-hotspot-layer screen2-svg-hotspots" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMax slice" aria-label="Интерактивные зоны Каменномостского">
+                <svg class="hotspot svg-hotspot" tabindex="0" role="button" data-kind="correct" data-label="Трещина на дороге у подошвы" data-icon="⌁" data-feedback="Трещины в асфальте или грунте у подножия склона - явный след смещения грунта. Они появляются, когда склоновые массы движутся вниз, разрывая покрытия и коммуникации." aria-label="Трещина на дороге у подошвы" x="492" y="960" width="376" height="126" viewBox="0 0 376 126">
+                    <path class="svg-hotspot-shape" d="M109.407 11.0924L7.90723 3.59241L128.407 122.592H347.407L369.907 107.592L332.407 87.5924L258.407 79.0924L178.407 46.5924L109.407 11.0924Z"/>
+                    <circle class="svg-hotspot-marker" cx="188" cy="63" r="25"/>
+                    <text class="svg-hotspot-symbol svg-symbol-correct" x="188" y="72">✓</text>
+                    <text class="svg-hotspot-symbol svg-symbol-wrong" x="188" y="72">×</text>
+                </svg>
+                <svg class="hotspot svg-hotspot" tabindex="0" role="button" data-kind="correct" data-label="Выход воды из склона" data-icon="≈" data-feedback="Появление воды на склоне или просачивание - классический признак оползневой активности. Вода насыщает грунт и выдавливает породы, снижая устойчивость склона." aria-label="Выход воды из склона" x="1045" y="487" width="440" height="523" viewBox="0 0 440 523">
+                    <path class="svg-hotspot-shape" d="M85.7195 363.5L6.21948 517.5L85.7195 488L155.219 432.5L221.719 338L291.219 155L432.219 3H373.719L221.719 74.5L155.219 200L85.7195 363.5Z"/>
+                    <circle class="svg-hotspot-marker" cx="220" cy="262" r="25"/>
+                    <text class="svg-hotspot-symbol svg-symbol-correct" x="220" y="271">✓</text>
+                    <text class="svg-hotspot-symbol svg-symbol-wrong" x="220" y="271">×</text>
+                </svg>
+                <svg class="hotspot svg-hotspot" tabindex="0" role="button" data-kind="correct" data-label="Наклонённое дерево" data-icon="↘" data-feedback="Наклон деревьев указывает, что грунт постепенно сдвигается, унося вместе с собой корни. Это точный знак подвижки оползневого тела." aria-label="Наклонённое дерево" x="1325" y="132" width="398" height="519" viewBox="0 0 398 519">
+                    <path class="svg-hotspot-shape" d="M307 437.052L262.5 511.052L350 468.552L392.5 419.052L343 389.052L283.5 309.052L291.5 273.552L343 249.552L365.5 206.052C360.667 192.886 350.8 166.552 350 166.552C349 166.552 345 135.552 343 122.552C341.4 112.152 318.333 107.886 307 107.052L262.5 93.0525C259.167 80.2192 251.8 53.9525 249 51.5525C246.2 49.1525 226.5 41.2192 217 37.5525L194.5 14.5525L155.5 3.05249L114 8.05249L99 37.5525L68.5 43.5525L49.5 79.0525L14 107.052C10.3333 117.886 3 144.952 3 166.552V206.052L62.5 223.052V244.552L49.5 297.052L99 336.552C112 334.052 140.3 328.452 149.5 326.052C158.7 323.652 198.333 310.386 217 304.052L307 437.052Z"/>
+                    <circle class="svg-hotspot-marker" cx="199" cy="260" r="25"/>
+                    <text class="svg-hotspot-symbol svg-symbol-correct" x="199" y="269">✓</text>
+                    <text class="svg-hotspot-symbol svg-symbol-wrong" x="199" y="269">×</text>
+                </svg>
+                <svg class="hotspot svg-hotspot" tabindex="0" role="button" data-kind="wrong" data-label="Лужа на ровном участке дороги" data-icon="•" data-feedback="Простая лужа на ровном месте ничем не примечательна. Это просто стоячая вода, не связанная с оседанием или сползанием склонов." aria-label="Лужа на ровном участке дороги" x="140" y="989" width="219" height="65" viewBox="0 0 219 65">
+                    <path class="svg-hotspot-shape" d="M15.9343 47.259L81.9343 56.759L88.4343 61.759C125.101 56.9257 200.434 47.259 208.434 47.259C216.434 47.259 216.101 37.9257 214.934 33.259C204.601 28.759 182.834 17.659 178.434 9.25904C172.934 -1.24096 137.434 4.75904 132.434 4.25904C127.434 3.75904 88.4343 9.25904 81.9343 9.25904C76.7343 9.25904 41.7677 16.259 24.9343 19.759L4.43433 33.259L15.9343 47.259Z"/>
+                    <circle class="svg-hotspot-marker" cx="110" cy="33" r="25"/>
+                    <text class="svg-hotspot-symbol svg-symbol-correct" x="110" y="42">✓</text>
+                    <text class="svg-hotspot-symbol svg-symbol-wrong" x="110" y="42">×</text>
+                </svg>
+                <svg class="hotspot svg-hotspot" tabindex="0" role="button" data-kind="wrong" data-label="Каменный выход без деформаций" data-icon="◒" data-feedback="Оголившийся камень или выход породы сам по себе не знак оползня. Важнее наличие деформаций: треска, наклона, трещин. Без них это лишь обнажение породы." aria-label="Каменный выход без деформаций" x="1278" y="698" width="475" height="380" viewBox="0 0 475 380">
+                    <path class="svg-hotspot-shape" d="M470.266 85.5497L394.266 176.55L317.266 275.05L228.266 318.55L111.266 376.05H3.26562L9.76562 299.55L81.7656 275.05L95.2656 190.05L181.766 164.55L201.766 109.05L276.766 69.5497L317.266 33.5497L388.266 3.54968L470.266 85.5497Z"/>
+                    <circle class="svg-hotspot-marker" cx="238" cy="190" r="25"/>
+                    <text class="svg-hotspot-symbol svg-symbol-correct" x="238" y="199">✓</text>
+                    <text class="svg-hotspot-symbol svg-symbol-wrong" x="238" y="199">×</text>
+                </svg>
+                <svg class="hotspot svg-hotspot" tabindex="0" role="button" data-kind="wrong" data-label="Дом" data-icon="⌂" aria-label="Дом" x="167" y="569" width="495" height="206" viewBox="0 0 495 206">
+                    <path class="svg-hotspot-shape" d="M38.0481 127.586V202.586H491.548V141.086L466.048 96.5857H399.048L350.548 3.08569L91.5481 15.0857L6.0481 127.586H38.0481Z"/>
+                    <circle class="svg-hotspot-marker" cx="248" cy="103" r="25"/>
+                    <text class="svg-hotspot-symbol svg-symbol-correct" x="248" y="112">✓</text>
+                    <text class="svg-hotspot-symbol svg-symbol-wrong" x="248" y="112">×</text>
+                </svg>
+            </svg>
+
+            <aside class="field-expert" aria-live="polite">
+                <img class="field-expert-image"
+                     src="{% static 'images/geo.png' %}"
+                     data-idle-src="{% static 'images/geo.png' %}"
+                     data-true-src="{% static 'images/geo_true.png' %}"
+                     alt="Геолог-эксперт экспедиции">
+                <div class="feedback-card character-feedback" aria-hidden="true">
+                    <div>
+                        <strong class="feedback-title"></strong>
+                        <p class="feedback-text"></p>
+                    </div>
+                </div>
+            </aside>
+
+            <button class="continue-button screen2-continue" type="button" data-action="screen3">
+                <span>Продолжить экспедицию</span>
+                <span class="continue-arrow" aria-hidden="true">→</span>
+            </button>
+        </section>
+
+        <section class="location-screen expedition-screen decision-screen screen-fisht-hadzhokh"
+                 id="screen-fisht-hadzhokh"
+                 data-location="Фишт и Хаджох"
+                 data-topic="обвалы, осыпи, мониторинг склонов и инженерная защита опасных зон"
+                 data-required="3"
+                 data-storage-key="geoshield-fisht-hadzhokh-complete"
+                 data-completion="Геологическая безопасность начинается не после обвала, а до него — с наблюдения, прогноза и понятных мер защиты."
+                 style="background-image: url('{% static 'images/loca3.png' %}?v=loca3-20260621-2');"
+                 aria-label="Локация Фишт и Хаджох">
+            <div class="weather-tint screen3-tint" aria-hidden="true"></div>
+
+            <header class="scene-hud fade-in">
+                <div class="location-stack">
+                    <section class="location-gallery" aria-label="Галерея Фишта и Хаджоха">
+                        <div class="gallery-track">
+                            <img src="{% static 'images/fi.png' %}" alt="Фишт и Хаджох, панорама маршрута" class="is-active">
+                            <img src="{% static 'images/fi1.png' %}" alt="Фишт, горный склон">
+                            <img src="{% static 'images/fi2.png' %}" alt="Фишт, осыпной участок">
+                            <img src="{% static 'images/fi3.png' %}" alt="Хаджох, скальный борт">
+                            <img src="{% static 'images/fi4.png' %}" alt="Фишт и Хаджох, инженерная зона">
+                        </div>
+                        <button class="gallery-nav gallery-prev" type="button" aria-label="Предыдущее фото">◀</button>
+                        <button class="gallery-nav gallery-next" type="button" aria-label="Следующее фото">▶</button>
+                        <div class="gallery-caption">
+                            <span>Фишт и Хаджох</span>
+                        </div>
+                    </section>
+
+                    <nav class="route-map route-map-stage-3" data-stage="3" aria-label="Маршрут экспедиции">
+                        <div class="route-line" aria-hidden="true">
+                            <span class="route-fill"></span>
+                            <span class="route-marker"></span>
+                        </div>
+                        <ol>
+                            <li class="is-complete"><span>1</span></li>
+                            <li class="is-complete"><span>2</span></li>
+                            <li class="is-active"><span>3</span></li>
+                            <li><span>4</span></li>
+                            <li><span>5</span></li>
+                        </ol>
+                    </nav>
+                </div>
+
+                <div class="task-chip screen3-task-chip">
+                    На этой панораме три участка с риском обвала/осыпи. Нажми на каждый и выбери: что здесь нужно наблюдать и какая защита подходит лучше всего.
+                </div>
+
+                <div class="sign-counter screen3-counter" aria-live="polite" aria-label="Счётчик проверенных зон">
+                    <span class="counter-orb" aria-hidden="true"></span>
+                    <strong class="found-count">0/3</strong>
+                </div>
+            </header>
+
+            <svg class="hotspot-layer decision-layer" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice" aria-label="Инженерные зоны Фишта и Хаджоха">
+                <g class="decision-zone" tabindex="0" role="button" data-zone="fisht-rock" aria-label="Зона A: Фишт, верхний скальный пояс" transform="translate(0 52) scale(1.148)">
+                    <path class="decision-zone-shape" d="M123.285 88.3303L9.28503 133.33L673.785 325.33L915.785 302.83L1000.79 325.33L1012.79 292.33V271.83L978.285 257.83L957.285 200.83L926.285 181.83H886.285L853.785 124.83L829.285 148.83L808.785 133.33L779.285 148.83L696.285 109.33L673.785 60.8303L628.785 36.3303L562.785 3.33032L491.785 36.3303L417.785 22.8303L396.785 36.3303H372.785H327.785L272.285 22.8303L227.285 70.8303H199.785L171.785 96.8303L123.285 88.3303Z"/>
+                    <rect class="decision-zone-stamp-bg" x="390" y="132" width="176" height="46" rx="23"/>
+                    <text class="decision-zone-stamp" x="478" y="162">Проверено</text>
+                </g>
+                <g class="decision-zone" tabindex="0" role="button" data-zone="fisht-scree" aria-label="Зона B: Фишт, шлейф осыпи над проходом" transform="translate(300 320) scale(1.148)">
+                    <path class="decision-zone-shape" d="M163.575 110L9.57544 3H207.075L465.075 93L593.075 37.5L760.575 124L670.575 164L451.075 186.5L163.575 110Z"/>
+                    <rect class="decision-zone-stamp-bg" x="300" y="72" width="176" height="46" rx="23"/>
+                    <text class="decision-zone-stamp" x="388" y="102">Проверено</text>
+                </g>
+                <g class="decision-zone" tabindex="0" role="button" data-zone="hadzhokh-edge" aria-label="Зона C: Хаджох, нависающий борт над площадкой" transform="translate(1078 486)">
+                    <path class="decision-zone-shape" d="M4.49487 449.578L160.495 538.078L198.495 558.578H777.995L836.995 325.078L447.495 3.57788L284.995 88.0779L4.49487 449.578Z"/>
+                    <rect class="decision-zone-stamp-bg" x="318" y="255" width="176" height="46" rx="23"/>
+                    <text class="decision-zone-stamp" x="406" y="285">Проверено</text>
+                </g>
+            </svg>
+
+            <aside class="field-expert" aria-live="polite">
+                <img class="field-expert-image"
+                     src="{% static 'images/geo.png' %}"
+                     data-idle-src="{% static 'images/geo.png' %}"
+                     data-true-src="{% static 'images/geo_true.png' %}"
+                     alt="Геолог-эксперт экспедиции">
+                <div class="feedback-card character-feedback" aria-hidden="true">
+                    <div>
+                        <strong class="feedback-title"></strong>
+                        <p class="feedback-text"></p>
+                    </div>
+                </div>
+            </aside>
+
+            <button class="continue-button screen3-continue" type="button" data-next-target="#screen-protection-flight">
+                <span>Продолжить экспедицию</span>
+                <span class="continue-arrow" aria-hidden="true">→</span>
+            </button>
+        </section>
+
+        <section class="location-screen expedition-screen flappy-screen screen-protection-flight"
+                 id="screen-protection-flight"
+                 data-location="Инженерная защита"
+                 data-topic="укрепления склонов и защита от обвалов"
+                 data-required="5"
+                 data-storage-key="geoshield-protection-flight-complete">
+            <nav class="route-map flappy-route-map route-map-stage-4" data-stage="4" aria-label="Маршрут экспедиции">
+                <div class="route-line" aria-hidden="true">
+                    <span class="route-fill"></span>
+                    <span class="route-marker"></span>
+                </div>
+                <ol>
+                    <li class="is-complete"><span>1</span></li>
+                    <li class="is-complete"><span>2</span></li>
+                    <li class="is-complete"><span>3</span></li>
+                    <li class="is-active"><span>4</span></li>
+                    <li><span>5</span></li>
+                </ol>
+            </nav>
+
+            <div class="flappy-hud" aria-live="polite">
+                <div class="task-chip flappy-mission">
+                    <span>Помогите коту Вжуху ехать только по геологически безопасной дороге Республики Адыгея</span>
+                </div>
+                <div class="sign-counter flappy-counter" aria-label="Счётчик собранных фото">
+                    <span class="counter-orb" aria-hidden="true"></span>
+                    <strong class="found-count">0/5</strong>
+                </div>
+            </div>
+
+            <div class="flappy-game" tabindex="0" role="application" aria-label="Мини-игра: соберите карточки инженерных укреплений">
+                <div class="flappy-start-hint">Нажми левой кнопкой мыши, чтобы начать</div>
+                <div class="flappy-objects" aria-hidden="true"></div>
+                <div class="flappy-bird" aria-hidden="true"></div>
+                <div class="flappy-win" hidden>Ты выиграл</div>
+                <div class="flappy-game-over" hidden>
+                    <p>Упс! Попробуйте пройти маршрут ещё раз.</p>
+                    <button class="flappy-restart" type="button">Начать заново</button>
+                </div>
+            </div>
+        </section>
+
+        <section class="location-screen expedition-screen certificate-screen"
+                 id="screen-certificate"
+                 data-location="Сертификат"
+                 data-topic="награждение за прохождение мини-обучения по геологической безопасности"
+                 data-required="1"
+                 data-storage-key="geoshield-certificate-complete"
+                 aria-label="Сертификат Монолита Адыгеи">
+            <nav class="route-map certificate-route-map route-map-stage-5" data-stage="5" aria-label="Маршрут экспедиции">
+                <div class="route-line" aria-hidden="true">
+                    <span class="route-fill"></span>
+                    <span class="route-marker"></span>
+                </div>
+                <ol>
+                    <li class="is-complete"><span>1</span></li>
+                    <li class="is-complete"><span>2</span></li>
+                    <li class="is-complete"><span>3</span></li>
+                    <li class="is-complete"><span>4</span></li>
+                    <li class="is-active"><span>5</span></li>
+                </ol>
+            </nav>
+
+            <div class="certificate-panel">
+                <div class="certificate-copy">
+                    <h1>Сертификат юного специалиста Монолита</h1>
+                    <p>Введите имя, чтобы оформить награду за прохождение мини-обучения по геологической безопасности.</p>
+                    <label class="certificate-name-field">
+                        <span>Имя участника</span>
+                        <input id="certificate-name-input" type="text" maxlength="28" placeholder="Введите имя" autocomplete="off">
+                    </label>
+                    <section class="result-summary" aria-labelledby="result-title">
+                        <h2 id="result-title">Мой результат</h2>
+                        <dl>
+                            <div><dt>Этапы</dt><dd id="metric-stages">0/4</dd></div>
+                            <div><dt>Ошибки</dt><dd id="metric-errors">0</dd></div>
+                            <div><dt>Подсказки</dt><dd id="metric-hints">0</dd></div>
+                            <div><dt>Время</dt><dd id="metric-time">—</dd></div>
+                        </dl>
+                    </section>
+                    <form class="experience-form" id="experience-form">
+                        <fieldset>
+                            <legend>Насколько понятным был маршрут?</legend>
+                            <div class="rating-options" aria-label="Оценка понятности от 1 до 5">
+                                <label><input type="radio" name="rating" value="1" required><span>1</span></label>
+                                <label><input type="radio" name="rating" value="2"><span>2</span></label>
+                                <label><input type="radio" name="rating" value="3"><span>3</span></label>
+                                <label><input type="radio" name="rating" value="4"><span>4</span></label>
+                                <label><input type="radio" name="rating" value="5"><span>5</span></label>
+                            </div>
+                        </fieldset>
+                        <label class="feedback-field">
+                            <span>Что можно улучшить? <small>необязательно</small></span>
+                            <textarea id="experience-comment" rows="2" maxlength="240" placeholder="Например: сделать подсказку заметнее"></textarea>
+                        </label>
+                        <div class="result-actions">
+                            <button class="primary-action compact" type="submit">Сохранить оценку</button>
+                            <button class="secondary-action compact" id="restart-expedition" type="button">Пройти ещё раз</button>
+                        </div>
+                        <p class="form-status" id="experience-status" aria-live="polite"></p>
+                    </form>
+                </div>
+
+                <div class="certificate-preview" aria-label="Предпросмотр сертификата">
+                    <img src="{% static 'images/sert.png' %}" alt="Сертификат Монолита Адыгеи">
+                    <strong id="certificate-name-output">Ваше имя</strong>
+                </div>
+            </div>
+        </section>
+
+        <section class="route-section" id="route-next">
+            <div>
+                <p class="eyebrow">Маршрут экспедиции</p>
+                <h2>Маршрут завершён</h2>
+                <p>Все основные локации мини-обучения уже доступны через маршрутные точки.</p>
+            </div>
+        </section>
+    </main>
+
+    <div class="decision-modal" id="decision-modal" hidden>
+        <section class="decision-modal-card" role="dialog" aria-modal="true" aria-labelledby="decision-title">
+            <button class="decision-close" type="button" data-decision-close aria-label="Закрыть окно">×</button>
+            <p class="decision-kicker" id="decision-zone-label"></p>
+            <h2 id="decision-title"></h2>
+            <p class="decision-description" id="decision-description"></p>
+
+            <div class="decision-groups">
+                <div class="decision-group" data-group="observe">
+                    <h3>Что отслеживать</h3>
+                    <div class="decision-options" data-options="observe"></div>
+                </div>
+                <div class="decision-group" data-group="protect">
+                    <h3>Чем защищать</h3>
+                    <div class="decision-options" data-options="protect"></div>
+                </div>
+            </div>
+
+            <p class="decision-hint" id="decision-hint" aria-live="polite"></p>
+        </section>
+    </div>
+
+    <div class="reinforcement-modal" id="reinforcement-modal" hidden>
+        <section class="reinforcement-card" role="dialog" aria-modal="true" aria-labelledby="reinforcement-title">
+            <button class="decision-close reinforcement-close" type="button" id="reinforcement-close" aria-label="Закрыть окно">×</button>
+            <div class="reinforcement-photo">
+                <img id="reinforcement-image" src="{% static 'images/loca4.png' %}" alt="">
+            </div>
+            <div class="reinforcement-copy">
+                <h2 id="reinforcement-title">Инженерная защита</h2>
+                <p id="reinforcement-description"></p>
+            </div>
+        </section>
+    </div>
+
+    <button class="guide-fab" id="guide-open" type="button" aria-label="Открыть GeoChat">
+        <img src="{% static 'images/GigaChat.png' %}" alt="" aria-hidden="true">
+    </button>
+
+    <div class="guide-backdrop" id="guide-backdrop" hidden></div>
+
+    <aside class="guide-panel" id="guide-panel" aria-hidden="true" aria-labelledby="guide-title">
+        <div class="guide-head">
+            <div>
+                <h2 id="guide-title">GeoChat</h2>
+            </div>
+            <button class="guide-close" id="guide-close" type="button" aria-label="Закрыть GeoChat">×</button>
+        </div>
+
+        <div class="guide-chat" id="guide-chat" aria-live="polite">
+            <article class="chat-message assistant" id="guide-intro">
+                Я рядом, когда понадобится подсказка. Ищите признаки, которые появились или усилились после сильных осадков.
+            </article>
+        </div>
+
+        <details class="quick-questions" id="quick-questions">
+            <summary>Хотите узнать больше?</summary>
+            <div class="quick-question-list">
+                <button type="button">Почему сильный дождь повышает риск опасных процессов?</button>
+                <button type="button">Что такое эрозия?</button>
+                <button type="button">Как образуются промоины?</button>
+                <button type="button">Какие опасные процессы характерны для Адыгеи?</button>
+            </div>
+        </details>
+
+        <form class="guide-form" id="guide-form">
+            {% csrf_token %}
+            <label class="sr-only" for="guide-input">Ваш вопрос GeoChat</label>
+            <input id="guide-input" name="message" type="text" autocomplete="off" placeholder="Спросите про признаки опасности">
+            <button type="submit">Отправить</button>
+        </form>
+        <p class="guide-model-note">Используется модель GigaChat — мультимодальная нейросеть, разработанная компанией «Сбер»</p>
+    </aside>
+
+    <script src="{% static 'expedition/app.js' %}?v=ux-practicum-20261025"></script>
+</body>
+</html>

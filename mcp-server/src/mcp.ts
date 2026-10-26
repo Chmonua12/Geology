@@ -5,7 +5,6 @@ const formProperties = {
   learnerId: { type: "string", minLength: 3, maxLength: 80, description: "ID ученика из формы сайта" },
   topic: { type: "string", enum: ["karst", "landslide", "rockfall", "protection"] },
   difficulty: { type: "string", enum: ["beginner", "medium", "advanced"] },
-  taskCount: { type: "integer", minimum: 3, maximum: 6 },
   hintMode: { type: "string", enum: ["always", "on-demand", "off"] },
   reason: { type: "string", minLength: 8, maxLength: 240 },
 } as const;
@@ -32,15 +31,15 @@ async function callTool(name: string, args: Record<string, unknown>) {
   if (name === "fill_expedition_form") {
     const form = expeditionFormSchema.parse(args);
     const data = await callApi("/api/internal/draft", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) });
-    return { content: [{ type: "text", text: `Форма заполнена: тема ${form.topic}, сложность ${form.difficulty}, заданий ${form.taskCount}.` }], structuredContent: data };
+    return { content: [{ type: "text", text: `Форма заполнена: тема ${form.topic}, сложность ${form.difficulty}.` }], structuredContent: data };
   }
   if (name === "create_personal_expedition") {
     if (args.confirmed !== true) throw new Error("Сначала нужно получить явное подтверждение пользователя");
     const { confirmed: _confirmed, ...rawForm } = args;
     const form = expeditionFormSchema.parse(rawForm);
     const data = await callApi("/api/internal/routes", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ form }) });
-    const route = data.route as { tasks: unknown[]; form: { topic: string } };
-    return { content: [{ type: "text", text: `Персональная экспедиция создана: ${route.tasks.length} заданий по теме ${route.form.topic}.` }], structuredContent: data };
+    const route = data.route as { title: string; launchUrl: string };
+    return { content: [{ type: "text", text: `Персональная экспедиция создана: ${route.title}. Откройте игровое задание: ${route.launchUrl}` }], structuredContent: data };
   }
   throw new Error(`Unknown tool: ${name}`);
 }

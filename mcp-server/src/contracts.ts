@@ -19,7 +19,6 @@ export type ExpeditionForm = {
   learnerId: string;
   topic: Topic;
   difficulty: Difficulty;
-  taskCount: number;
   hintMode: HintMode;
   reason: string;
 };
@@ -43,7 +42,6 @@ export const expeditionFormSchema = {
     if (!validId(data?.learnerId)) issues.push("learnerId must contain 3–80 characters");
     if (!topics.includes(data?.topic as Topic)) issues.push("unknown topic");
     if (!difficulties.includes(data?.difficulty as Difficulty)) issues.push("unknown difficulty");
-    if (!integerBetween(data?.taskCount, 3, 6)) issues.push("taskCount must be an integer from 3 to 6");
     if (!hintModes.includes(data?.hintMode as HintMode)) issues.push("unknown hintMode");
     if (typeof data?.reason !== "string" || data.reason.trim().length < 8 || data.reason.length > 240) issues.push("reason must contain 8–240 characters");
     return issues.length ? { success: false, error: { issues } } : { success: true, data: data as ExpeditionForm };
@@ -73,19 +71,13 @@ export const progressSchema = {
   },
 };
 
-export type ExpeditionTask = {
-  id: string;
-  topic: Topic;
-  title: string;
-  prompt: string;
-  answer: string;
-  explanation: string;
-};
-
 export type PersonalRoute = {
   id: string;
   learnerId: string;
   form: ExpeditionForm;
-  tasks: ExpeditionTask[];
+  screenId: string;
+  title: string;
+  gameType: string;
+  launchUrl: string;
   createdAt: string;
 };

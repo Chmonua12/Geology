@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 type Topic = "karst" | "landslide" | "rockfall" | "protection";
 type Difficulty = "beginner" | "medium" | "advanced";
@@ -8,7 +8,6 @@ type ExpeditionForm = {
   learnerId: string;
   topic: Topic;
   difficulty: Difficulty;
-  taskCount: number;
   hintMode: HintMode;
   reason: string;
 };
@@ -22,19 +21,14 @@ type LearningProgress = {
   topicErrors: Record<Topic, number>;
 };
 
-type RouteTask = {
-  id: string;
-  title: string;
-  prompt: string;
-  answer: string;
-  explanation: string;
-};
-
 type PersonalRoute = {
   id: string;
   learnerId: string;
   form: ExpeditionForm;
-  tasks: RouteTask[];
+  screenId: string;
+  title: string;
+  gameType: string;
+  launchUrl: string;
   createdAt: string;
 };
 
@@ -59,7 +53,6 @@ function defaultForm(learnerId: string): ExpeditionForm {
     learnerId,
     topic: "karst",
     difficulty: "medium",
-    taskCount: 4,
     hintMode: "on-demand",
     reason: "Повторить тему, в которой было больше всего ошибок.",
   };
@@ -81,23 +74,19 @@ export default function App() {
   const [notice, setNotice] = useState("Загружаем данные экспедиции…");
   const [submitting, setSubmitting] = useState(false);
   const [created, setCreated] = useState(false);
-  const routeRef = useRef<HTMLElement>(null);
-  const shouldRevealRoute = useRef(false);
 
-  function revealRoute() {
-    shouldRevealRoute.current = true;
+  async function launchRoute(nextRoute: PersonalRoute) {
+    setRoute(nextRoute);
     setCreated(true);
-    window.setTimeout(() => setCreated(false), 2200);
+    setNotice(`Маршрут готов: ${nextRoute.title}. Переходим к игре…`);
+    try {
+      await fetch(nextRoute.launchUrl, { mode: "no-cors" });
+      window.location.assign(nextRoute.launchUrl);
+    } catch {
+      setCreated(false);
+      setNotice("Основной сайт не запущен. Откройте второй терминал и выполните: python manage.py runserver");
+    }
   }
-
-  useEffect(() => {
-    if (!route || !shouldRevealRoute.current) return;
-    shouldRevealRoute.current = false;
-    window.requestAnimationFrame(() => {
-      routeRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-      routeRef.current?.focus({ preventScroll: true });
-    });
-  }, [route]);
 
   useEffect(() => {
     let cancelled = false;
@@ -110,7 +99,7 @@ export default function App() {
       if (cancelled) return;
       setProgress(progressData.progress);
       if (draftData.draft) setForm(draftData.draft);
-      setRoute(routeData.route);
+      if (routeData.route?.launchUrl) setRoute(routeData.route);
       setNotice(draftData.draft ? "Черновик MCP загружен. Проверьте параметры." : "Можно настроить маршрут вручную или через MCP.");
     }).catch(() => {
       if (!cancelled) setNotice("API пока недоступен. Запустите bun run dev в корне проекта.");
@@ -137,9 +126,7 @@ export default function App() {
           setNotice("MCP заполнил форму. Проверьте данные и подтвердите создание.");
         }
         if (message.type === "route:created") {
-          setRoute(message.payload);
-          setNotice("MCP создал персональный маршрут.");
-          revealRoute();
+          void launchRoute(message.payload);
         }
         if (message.type === "progress:update") setProgress(message.payload);
       };
@@ -172,9 +159,7 @@ export default function App() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ form }),
       });
-      setRoute(data.route);
-      setNotice("Маршрут создан. Можно начинать новую экспедицию.");
-      revealRoute();
+      await launchRoute(data.route);
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "Не удалось создать маршрут.");
     } finally {
@@ -264,12 +249,6 @@ export default function App() {
             </fieldset>
 
             <label>
-              <span>Количество заданий: <b>{form.taskCount}</b></span>
-              <input type="range" min="3" max="6" step="1" value={form.taskCount} onChange={(event) => update("taskCount", Number(event.target.value))} />
-              <div className="range-labels"><span>3 — короткая</span><span>6 — полная</span></div>
-            </label>
-
-            <label>
               <span>Режим подсказок</span>
               <select value={form.hintMode} onChange={(event) => update("hintMode", event.target.value as HintMode)}>
                 <option value="always">Показывать всегда</option>
@@ -284,7 +263,7 @@ export default function App() {
             </label>
 
             <button className="submit" type="submit" disabled={submitting || connection === "offline"}>
-              {submitting ? "Собираем маршрут…" : created ? "Экспедиция создана" : "Создать экспедицию"}
+              {submitting ? "Готовим игру…" : created ? "Переходим к игре" : "Создать и перейти к игре"}
               <span aria-hidden="true">{created ? "✓" : "→"}</span>
             </button>
           </form>
@@ -292,22 +271,16 @@ export default function App() {
       </section>
 
       {route && (
-        <section className="route-section" ref={routeRef} tabIndex={-1} aria-live="polite">
+        <section className="route-section" aria-live="polite">
           <div className="route-title">
             <div>
-              <p className="section-label">Маршрут готов</p>
-              <h2>{topicLabels[route.form.topic]}</h2>
+              <p className="section-label">Игровой экран выбран</p>
+              <h2>{route.title}</h2>
             </div>
-            <span>{route.tasks.length} заданий</span>
+            <span>{topicLabels[route.form.topic]}</span>
           </div>
-          <ol className="task-list">
-            {route.tasks.map((task, index) => (
-              <li key={task.id}>
-                <span>{String(index + 1).padStart(2, "0")}</span>
-                <div><h3>{task.title}</h3><p>{task.prompt}</p><details><summary>Проверить ответ</summary><b>{task.answer}</b><p>{task.explanation}</p></details></div>
-              </li>
-            ))}
-          </ol>
+          <p className="game-description">{route.gameType}. Это один из существующих экранов основного проекта, а не новое текстовое задание.</p>
+          <a className="launch-game" href={route.launchUrl}>Открыть игровое задание <span aria-hidden="true">→</span></a>
         </section>
       )}
 

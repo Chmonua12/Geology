@@ -93,6 +93,9 @@ input[type="range"] { width: 100%; accent-color: var(--forest); }
 details { margin-top: 14px; padding: 12px 14px; background: #f1f3e9; border-radius: 3px; color: #355046; font-size: 12px; }
 details summary { cursor: pointer; font-weight: 800; }
 details b { display: block; margin: 12px 0 4px; }
+.game-description { max-width: 720px; margin: 28px 0; color: #5d7169; line-height: 1.65; }
+.launch-game { display: flex; align-items: center; justify-content: space-between; max-width: 480px; padding: 17px 19px; border-radius: 3px; color: white; background: var(--forest); text-decoration: none; font-size: 13px; font-weight: 800; }
+.launch-game:hover, .launch-game:focus-visible { background: #1b513d; }
 footer { padding: 22px; text-align: center; color: #71827b; font-size: 11px; }
 
 @media (max-width: 820px) {

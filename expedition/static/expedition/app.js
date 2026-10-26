@@ -235,6 +235,8 @@ const journeyMetrics = loadMetrics();
 const learnerId = getOrCreateLearnerId();
 
 const screens = [...document.querySelectorAll(".expedition-screen")];
+const personalExpedition = getPersonalExpeditionConfig();
+preparePersonalExpedition(screens, personalExpedition);
 const track = document.querySelector("#expedition-track");
 const screenState = new WeakMap();
 let currentScreenIndex = getInitialScreenIndex();
@@ -279,6 +281,10 @@ const feedbackHideTimers = new WeakMap();
 let activeDecision = null;
 let activeFlappyScreen = null;
 let activeFlappyGroup = null;
+
+if (personalExpedition?.hintMode === "off") {
+    guideOpen.hidden = true;
+}
 
 screens.forEach((screen) => {
     const state = {
@@ -450,6 +456,9 @@ const observer = new IntersectionObserver(
 
 screens.forEach((screen) => observer.observe(screen));
 updateQuickQuestions();
+if (personalExpedition?.hintMode === "always") {
+    window.setTimeout(openGuide, 700);
+}
 
 function loadMetrics() {
     const defaults = {
@@ -491,6 +500,11 @@ function createEmptyTopicErrors() {
 }
 
 function getOrCreateLearnerId() {
+    const queryId = new URLSearchParams(window.location.search).get("learner")?.trim();
+    if (queryId) {
+        localStorage.setItem(LEARNER_ID_KEY, queryId);
+        return queryId;
+    }
     const stored = localStorage.getItem(LEARNER_ID_KEY);
     if (stored) {
         return stored;
@@ -535,6 +549,10 @@ function syncLearningProgress() {
 }
 
 function setupOnboarding() {
+    if (personalExpedition) {
+        onboarding.hidden = true;
+        return;
+    }
     const completed = getCompletedStageCount();
     const hasProgress = completed > 0 || Number(localStorage.getItem(ACTIVE_SCREEN_KEY) || 0) > 0;
     onboardingProgress.textContent = hasProgress
@@ -1816,11 +1834,51 @@ function getSceneGapPixels() {
 }
 
 function getInitialScreenIndex() {
+    if (personalExpedition) {
+        return personalExpedition.screenIndex;
+    }
     const stored = Number(localStorage.getItem(ACTIVE_SCREEN_KEY) || 0);
     if (!Number.isInteger(stored) || stored < 0 || stored >= screens.length) {
         return 0;
     }
     return stored;
+}
+
+function getPersonalExpeditionConfig() {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("personal") !== "1") {
+        return null;
+    }
+
+    const topic = params.get("topic");
+    const difficulty = params.get("difficulty") || "medium";
+    const hintMode = params.get("hintMode") || "on-demand";
+    const screenIndexes = { karst: 0, landslide: 1, rockfall: 2, protection: 3 };
+    if (!(topic in screenIndexes)) {
+        return null;
+    }
+
+    return { topic, difficulty, hintMode, screenIndex: screenIndexes[topic] };
+}
+
+function preparePersonalExpedition(allScreens, config) {
+    if (!config) {
+        return;
+    }
+
+    const screen = allScreens[config.screenIndex];
+    if (!screen) {
+        return;
+    }
+
+    const requiredByDifficulty = screen.classList.contains("flappy-screen")
+        ? { beginner: 3, medium: 4, advanced: 5 }
+        : { beginner: 2, medium: 3, advanced: 3 };
+    screen.dataset.required = String(requiredByDifficulty[config.difficulty] || requiredByDifficulty.medium);
+    localStorage.removeItem(screen.dataset.storageKey);
+    localStorage.setItem(ACTIVE_SCREEN_KEY, String(config.screenIndex));
+    document.body.dataset.personalExpedition = config.topic;
+    document.title = `Персональная экспедиция — ${screen.dataset.location}`;
 }
 
 function resetProgressIfNeeded() {

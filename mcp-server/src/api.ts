@@ -1,5 +1,5 @@
 import { expeditionFormSchema, progressSchema } from "./contracts";
-import { getDraft, getLatestRoute, getProgress, saveDraft, saveProgress, saveRoute } from "./database";
+import { getDraft, getLatestRoute, getProgress, saveDraft, saveProgress, saveRoute, saveTrialResult, getTrialResults } from "./database";
 import { buildPersonalRoute } from "./taskBank";
 
 type SocketData = { learnerId: string };
@@ -62,6 +62,27 @@ const server = Bun.serve<SocketData>({
       return json(request, { progress }, 201);
     }
 
+    if (url.pathname === "/api/trials" && request.method === "POST") {
+      const data = await request.json().catch(() => null) as Record<string, unknown> | null;
+      const topics = ["karst", "landslide", "rockfall", "protection"];
+      if (!data || typeof data.learnerId !== "string" || data.learnerId.length < 3 || data.learnerId.length > 80
+        || !topics.includes(String(data.topic)) || !["support", "challenge"].includes(String(data.mode))
+        || typeof data.completed !== "boolean" || !Number.isInteger(data.findings) || !Number.isInteger(data.mistakes)) {
+        return json(request, {error: "Invalid trial result"}, 422);
+      }
+      return json(request, {trial: saveTrialResult(data as {learnerId:string})}, 201);
+    }
+    const trialMatch = url.pathname.match(/^\/api\/trials\/([^/]+)$/);
+    if (trialMatch && request.method === "GET") {
+      return json(request, {trials: getTrialResults(decodeURIComponent(trialMatch[1]))});
+    }
+    if (url.pathname === "/api/internal/trial" && request.method === "POST") {
+      const data = await request.json().catch(() => null) as Record<string, unknown> | null;
+      if (!data || typeof data.learnerId !== "string" || !["karst", "landslide", "rockfall", "protection"].includes(String(data.topic))
+        || !["support", "challenge"].includes(String(data.mode))) return json(request,{error:"Invalid mission"},422);
+      broadcast(data.learnerId, {type:"trial:launch", payload:{topic:data.topic, mode:data.mode}});
+      return json(request,{queued:true,topic:data.topic,mode:data.mode});
+    }
     const draftMatch = url.pathname.match(/^\/api\/draft\/([^/]+)$/);
     if (draftMatch && request.method === "GET") {
       const learnerId = decodeURIComponent(draftMatch[1]);

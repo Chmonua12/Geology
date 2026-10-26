@@ -122,7 +122,7 @@
     return items;
   }
 
-  function create({ onResult = () => {} } = {}) {
+  function create({ onResult = () => {}, getActiveTopic = null } = {}) {
     const dialog = document.createElement("dialog");
     dialog.className = "gr-dialog";
     dialog.setAttribute("aria-labelledby", "gr-title");
@@ -273,6 +273,8 @@
     }
 
     function currentTopic() {
+      const active = getActiveTopic?.();
+      if (missions[active]) return active;
       const screen = document.querySelector(".expedition-screen.is-active")
         || document.querySelectorAll(".expedition-screen")[Number(localStorage.getItem("geoshield-active-screen-index") || 0)];
       const id = screen?.id || "";

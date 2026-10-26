@@ -48,3 +48,6 @@
 @media(max-width:720px){.gr-body{grid-template-columns:1fr}.gr-aside{min-height:0;padding:19px 22px}.gr-emblem{width:76px;height:76px;margin:5px 0 9px}.gr-emblem span{font-size:32px}.gr-aside h2{font-size:24px}.gr-subtitle{margin-top:6px;font-size:13px}.gr-location{margin-top:6px}.gr-progress{padding-top:13px}.gr-play{min-height:0;padding:22px}.gr-scene{margin:18px 0 7px}.gr-question{font-size:21px;margin-bottom:15px}.gr-answer{padding:12px 14px;min-height:48px;font-size:13px}.gr-launcher{bottom:84px;left:10px;padding:10px 13px;font-size:12px}.gr-header{padding:11px 17px}.gr-brand{font-size:11px}}
 @media(max-width:440px){.gr-aside{padding:14px 17px}.gr-emblem{display:none}.gr-play{padding:15px 17px}.gr-scene{margin-top:10px}.gr-header{padding:8px 14px}.gr-dialog{max-height:96dvh}}
 @media(prefers-reduced-motion:reduce){.gr-emblem i{animation:none}.gr-fill,.gr-answer{transition:none}}
+
+/* Не перекрывать вводный экран экспедиции. */
+body:has(.onboarding:not([hidden])) .gr-launcher{display:none}

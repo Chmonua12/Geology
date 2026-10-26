@@ -1,0 +1,50 @@
+/* ГеоРадар — дополнительное интерактивное задание */
+.gr-dialog{width:min(960px,calc(100vw - 24px));max-width:960px;max-height:95dvh;border:0;padding:0;border-radius:25px;overflow:auto;background:#082c3d;color:#f1fffa;box-shadow:0 32px 110px #061b27d9;font-family:system-ui,-apple-system,Segoe UI,sans-serif}
+.gr-dialog::backdrop{background:#071522b8;backdrop-filter:blur(8px)}
+.gr-shell{border:1px solid #a0eed66a;border-radius:25px;overflow:hidden;background:linear-gradient(145deg,#082c3e,#0c3543 50%,#153b43)}
+.gr-header{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:17px 23px;border-bottom:1px solid #b7f7e12b;background:#ffffff07}
+.gr-brand{display:flex;align-items:center;gap:12px;font-size:13px;font-weight:900;letter-spacing:.14em;color:#d8ffe9}
+.gr-brand small{color:#87bea9;letter-spacing:.1em}.gr-brand-icon{display:grid;place-items:center;width:33px;height:33px;font-size:24px;color:#112e36;background:#90eabe;border-radius:10px}
+.gr-close{width:38px;height:38px;border:1px solid #ffffff52;border-radius:50%;background:#ffffff14;color:#fff;font-size:16px;cursor:pointer}
+.gr-close:focus-visible,.gr-next:focus-visible,.gr-answer:focus-visible,.gr-hint:focus-visible,.gr-launcher:focus-visible{outline:3px solid #afffd3;outline-offset:2px}
+.gr-body{display:grid;grid-template-columns:minmax(240px,.85fr) minmax(310px,1.15fr);gap:0}
+.gr-aside{position:relative;isolation:isolate;padding:30px 30px 32px;background:radial-gradient(circle at 50% 45%,#448a7766,transparent 60%),linear-gradient(135deg,#133c4e,#07313f);display:flex;flex-direction:column;align-items:flex-start;min-height:460px}
+.gr-kicker{font-size:11px;font-weight:900;letter-spacing:.16em;color:#88e8c3}
+.gr-emblem{align-self:center;position:relative;display:grid;place-items:center;width:160px;height:160px;margin:5px 0 12px;border-radius:50%;border:1px solid #82e5ce7d;background:repeating-radial-gradient(circle,#7cdeb51c 0,#7cdeb51c 1px,transparent 2px,transparent 21px),radial-gradient(circle,#6dd4aa21 15%,transparent 75%);box-shadow:inset 0 0 0 14px #95ecbb09,0 0 55px #6cddaf33}
+.gr-emblem:before,.gr-emblem:after{content:"";position:absolute;background:#76e1bf55}
+.gr-emblem:before{height:1px;width:92%}.gr-emblem:after{width:1px;height:92%}
+.gr-emblem span{font-size:62px;line-height:1;color:#d3ffe7;z-index:2;text-shadow:0 3px 16px #90eeb7}
+.gr-emblem i{position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 0deg,#a3ffcb25,transparent 75%,transparent);animation:gr-radar 5s linear infinite}
+@keyframes gr-radar{to{transform:rotate(360deg)}}
+.gr-level{color:#baf5ca;font-size:10px;letter-spacing:.15em;font-weight:900;margin-bottom:6px}
+.gr-aside h2{margin:0;font-size:clamp(25px,3vw,34px);line-height:1.1;letter-spacing:-.04em;color:white}
+.gr-subtitle{font-size:14px;line-height:1.6;color:#c1dcdf;margin:10px 0 0}
+.gr-location{font-size:13px;color:#b7f6da;margin-top:15px}
+.gr-progress{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;margin-top:auto;padding-top:23px;font-size:11px;letter-spacing:.1em;font-weight:800;color:#b7e9dd}
+.gr-count{font-size:17px;letter-spacing:0;color:white}
+.gr-track{height:8px;width:100%;background:#ffffff24;border-radius:99px;overflow:hidden;margin-top:10px}
+.gr-fill{display:block;height:100%;width:0;background:linear-gradient(90deg,#5fc7d2,#a9efae);border-radius:99px;transition:width .28s}
+.gr-play{padding:34px 32px;display:flex;flex-direction:column;min-height:460px}
+.gr-scene-head{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center;font-size:11px;font-weight:900;letter-spacing:.12em;color:#b6efd4}
+.gr-signal{color:#83c2b3}
+.gr-scene{font-size:14px;line-height:1.55;color:#c5dbdf;margin:36px 0 8px}
+.gr-question{font-size:clamp(20px,2.5vw,28px);line-height:1.22;letter-spacing:-.025em;color:white;margin:0 0 22px}
+.gr-answers{display:grid;gap:11px}
+.gr-answer{border:1px solid #b8e6d54b;border-radius:14px;background:#ffffff0c;color:#f5fffa;padding:17px 19px;text-align:left;font-family:inherit;font-size:14px;line-height:1.45;cursor:pointer;min-height:58px;transition:border-color .15s,background .15s,transform .15s}
+.gr-answer:enabled:hover{background:#ffffff1a;border-color:#a8edd0;transform:translateY(-1px)}
+.gr-answer.is-correct{background:#76dbaa30;border-color:#9bf1bb;color:#d9ffe6}
+.gr-answer.is-wrong{background:#ffb98522;border-color:#eab89c;color:#fff0e2}
+.gr-answer:disabled{cursor:default;opacity:.8}
+.gr-feedback{margin-top:14px;padding:13px 14px;border:1px solid #86e1c94a;border-radius:12px;font-size:13px;line-height:1.55;color:#e4f6ed;background:#85e5bd15}
+.gr-feedback.is-wrong{border-color:#ffbd9660;background:#ffa96c1a}
+.gr-feedback.is-correct{border-color:#91edc086;background:#5cb77b2c}
+.gr-footer{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-top:auto;padding-top:18px}
+.gr-hint{border:0;background:none;color:#95e8d2;font-size:13px;text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:10px 0}
+.gr-next{padding:13px 17px;border:0;border-radius:12px;background:#a6efca;color:#073c37;font-size:13px;font-weight:900;cursor:pointer}
+.gr-next:hover{background:#d4f9df}
+.gr-launcher{position:fixed;z-index:500;bottom:20px;left:20px;border:1px solid #d4fff0a8;background:#0e4554;color:#effff4;border-radius:999px;padding:11px 16px;box-shadow:0 6px 22px #102f4370;font:800 13px system-ui,sans-serif;letter-spacing:.025em;cursor:pointer}
+.gr-launcher:hover{background:#156779}
+.gr-dialog [hidden]{display:none!important}
+@media(max-width:720px){.gr-body{grid-template-columns:1fr}.gr-aside{min-height:0;padding:19px 22px}.gr-emblem{width:76px;height:76px;margin:5px 0 9px}.gr-emblem span{font-size:32px}.gr-aside h2{font-size:24px}.gr-subtitle{margin-top:6px;font-size:13px}.gr-location{margin-top:6px}.gr-progress{padding-top:13px}.gr-play{min-height:0;padding:22px}.gr-scene{margin:18px 0 7px}.gr-question{font-size:21px;margin-bottom:15px}.gr-answer{padding:12px 14px;min-height:48px;font-size:13px}.gr-launcher{bottom:84px;left:10px;padding:10px 13px;font-size:12px}.gr-header{padding:11px 17px}.gr-brand{font-size:11px}}
+@media(max-width:440px){.gr-aside{padding:14px 17px}.gr-emblem{display:none}.gr-play{padding:15px 17px}.gr-scene{margin-top:10px}.gr-header{padding:8px 14px}.gr-dialog{max-height:96dvh}}
+@media(prefers-reduced-motion:reduce){.gr-emblem i{animation:none}.gr-fill,.gr-answer{transition:none}}

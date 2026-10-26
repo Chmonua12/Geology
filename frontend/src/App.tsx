@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 type Topic = "karst" | "landslide" | "rockfall" | "protection";
 type Difficulty = "beginner" | "medium" | "advanced";
@@ -80,6 +80,24 @@ export default function App() {
   const [connection, setConnection] = useState<"connecting" | "online" | "offline">("connecting");
   const [notice, setNotice] = useState("Загружаем данные экспедиции…");
   const [submitting, setSubmitting] = useState(false);
+  const [created, setCreated] = useState(false);
+  const routeRef = useRef<HTMLElement>(null);
+  const shouldRevealRoute = useRef(false);
+
+  function revealRoute() {
+    shouldRevealRoute.current = true;
+    setCreated(true);
+    window.setTimeout(() => setCreated(false), 2200);
+  }
+
+  useEffect(() => {
+    if (!route || !shouldRevealRoute.current) return;
+    shouldRevealRoute.current = false;
+    window.requestAnimationFrame(() => {
+      routeRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      routeRef.current?.focus({ preventScroll: true });
+    });
+  }, [route]);
 
   useEffect(() => {
     let cancelled = false;
@@ -121,6 +139,7 @@ export default function App() {
         if (message.type === "route:created") {
           setRoute(message.payload);
           setNotice("MCP создал персональный маршрут.");
+          revealRoute();
         }
         if (message.type === "progress:update") setProgress(message.payload);
       };
@@ -155,6 +174,7 @@ export default function App() {
       });
       setRoute(data.route);
       setNotice("Маршрут создан. Можно начинать новую экспедицию.");
+      revealRoute();
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "Не удалось создать маршрут.");
     } finally {
@@ -264,14 +284,15 @@ export default function App() {
             </label>
 
             <button className="submit" type="submit" disabled={submitting || connection === "offline"}>
-              {submitting ? "Собираем маршрут…" : "Создать экспедицию"}<span aria-hidden="true">→</span>
+              {submitting ? "Собираем маршрут…" : created ? "Экспедиция создана" : "Создать экспедицию"}
+              <span aria-hidden="true">{created ? "✓" : "→"}</span>
             </button>
           </form>
         </div>
       </section>
 
       {route && (
-        <section className="route-section" aria-live="polite">
+        <section className="route-section" ref={routeRef} tabIndex={-1} aria-live="polite">
           <div className="route-title">
             <div>
               <p className="section-label">Маршрут готов</p>

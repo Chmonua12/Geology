@@ -1,0 +1,24 @@
+/* GeoDrone — адаптивная мини-игра */
+.gt-modal{border:0;padding:0;background:transparent;color:#eef9f8;max-width:min(960px,96vw);max-height:94vh;overflow:auto;border-radius:25px;box-shadow:0 30px 100px #021e30aa}
+.gt-modal::backdrop{background:#041722b8;backdrop-filter:blur(9px)}
+.gt-frame{background:linear-gradient(140deg,#0d394b,#102d42 65%,#0c1f31);border:1px solid #65cab77a;border-radius:25px;overflow:hidden;font-family:system-ui,sans-serif}
+.gt-header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 26px;border-bottom:1px solid #8edbd239;font-size:13px;font-weight:800;letter-spacing:.16em;color:#89e2d3}
+.gt-exit{background:#ffffff16;border:1px solid #ffffff45;border-radius:50%;color:white;width:39px;height:39px;cursor:pointer}
+.gt-content{display:grid;grid-template-columns:minmax(240px,1fr) minmax(310px,1.1fr);gap:24px;padding:30px}
+.gt-info{display:flex;flex-direction:column;align-items:flex-start;gap:16px}
+.gt-kicker{font-size:11px;font-weight:800;letter-spacing:.15em;color:#8cebd1}
+.gt-info h2{font-size:clamp(27px,4vw,44px);line-height:1.05;letter-spacing:-.04em;margin:0;color:#fff}
+.gt-description{font-size:15px;line-height:1.6;color:#bed8e2;margin:0}
+.gt-tags{display:flex;gap:8px;flex-wrap:wrap}.gt-tags span{background:#ffffff18;border:1px solid #ffffff30;border-radius:20px;padding:8px 12px;font-size:12px}
+.gt-stats{display:flex;justify-content:space-between;align-items:center;width:100%;margin-top:8px}.gt-stats strong{font-size:20px;color:#a8f3ca}
+.gt-bar{height:8px;width:100%;border-radius:10px;background:#ffffff20;overflow:hidden}.gt-fill{display:block;height:100%;width:0;background:linear-gradient(90deg,#56c4df,#a9f2af);transition:width .3s}
+.gt-feedback{background:#ffffff10;border-left:3px solid #8be8cc;padding:16px;border-radius:5px 13px 13px 5px;font-size:14px;line-height:1.6;min-height:90px;width:100%;margin:8px 0;color:#e0f7f3}
+.gt-finish{border:0;background:#a5f0d1;color:#12353c;border-radius:12px;padding:13px 17px;font-size:14px;font-weight:800;cursor:pointer}
+.gt-game{display:flex;flex-direction:column;align-items:center;gap:12px}
+.gt-grid{width:min(100%,390px);aspect-ratio:1;display:grid;grid-template-columns:repeat(7,1fr);grid-template-rows:repeat(7,1fr);gap:4px;padding:10px;background:#092637;border:1px solid #8fdfdf4c;border-radius:19px}
+.gt-square{font:inherit;background:#2b5663;border:1px solid #ffffff0d;border-radius:8px;display:grid;place-items:center;color:#a1dfd8;font-size:clamp(13px,2.3vw,25px);padding:0;min-width:0;transition:transform .12s,background .12s;cursor:pointer}
+.gt-square:nth-child(3n){background:#29515c}.gt-square.gt-danger{background:#924e40;color:#ffe6b8}.gt-square.gt-item{background:#3a726c;box-shadow:inset 0 0 0 1px #93ffcd77}.gt-square.gt-drone{background:#d9f7d5;transform:scale(1.09);z-index:1;box-shadow:0 3px 15px #9dfcbe77}.gt-square.gt-done{background:#28785e;color:#d6f9df}
+.gt-legend{font-size:12px;color:#afcdd2;margin:0}
+.gt-controls{display:grid;justify-items:center;gap:5px}.gt-controls>div{display:flex;gap:5px}.gt-controls button{border:1px solid #8ee4d672;border-radius:11px;width:49px;height:40px;color:#e5fff7;font-size:24px;background:#ffffff1c;cursor:pointer;touch-action:manipulation}.gt-controls button:hover,.gt-controls button:focus-visible{background:#63bda859}
+@media(max-width:680px){.gt-content{grid-template-columns:1fr;padding:18px;gap:12px}.gt-header{padding:10px 17px}.gt-info{gap:9px}.gt-info h2{font-size:27px}.gt-description{font-size:13px}.gt-feedback{min-height:auto;padding:10px}.gt-grid{width:min(100%,300px);padding:7px;gap:3px}.gt-modal{max-height:96vh;width:96vw}.gt-square{border-radius:5px;font-size:17px}.gt-legend{font-size:10px}}
+@media(prefers-reduced-motion:reduce){.gt-square,.gt-fill{transition:none}}

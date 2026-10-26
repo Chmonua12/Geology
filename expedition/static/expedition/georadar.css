@@ -58,7 +58,7 @@
   flex-direction: column;
   justify-content: flex-start;
   min-width: 0;
-  gap: clamp(10px, 1.5vw, 16px);
+  gap: clamp(8px, 1vw, 11px);
   overflow: auto;
   scrollbar-width: thin;
   scrollbar-color: #6bb991 transparent;
@@ -67,7 +67,7 @@
 .gr-question {
   margin: 0;
   color: #103d30;
-  font-size: clamp(20px, 2.6vw, 31px);
+  font-size: clamp(20px, 2.3vw, 28px);
   line-height: 1.17;
   font-weight: 900;
   text-wrap: balance;
@@ -82,8 +82,8 @@
 .gr-answer {
   position: relative;
   width: 100%;
-  min-height: clamp(49px, 5.5vw, 61px);
-  padding: 10px 52px 10px 20px;
+  min-height: clamp(45px, 4.9vw, 54px);
+  padding: 8px 52px 8px 20px;
   border: 2px solid #b2d7bd;
   border-radius: 18px;
   background: rgba(255, 255, 250, .97);

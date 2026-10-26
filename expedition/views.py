@@ -1,7 +1,6 @@
 import json
+import logging
 import os
-import urllib.error
-import urllib.request
 
 from django.conf import settings
 from django.http import JsonResponse
@@ -10,56 +9,11 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_POST
 
 
-ALLOWED_TOPICS = (
-    "геолог",
-    "опас",
-    "адыге",
-    "лаго",
-    "наки",
-    "дожд",
-    "осад",
-    "эроз",
-    "промоин",
-    "склон",
-    "ополз",
-    "сель",
-    "обвал",
-    "осып",
-    "фишт",
-    "хаджох",
-    "каньон",
-    "скал",
-    "трещинов",
-    "монитор",
-    "наблюден",
-    "осмотр",
-    "маршрут",
-    "сетк",
-    "стен",
-    "транше",
-    "полк",
-    "защит",
-    "сооруж",
-    "блок",
-    "облом",
-    "площадк",
-    "размы",
-    "руч",
-    "тропа",
-    "валун",
-    "цвет",
-    "указател",
-    "задани",
-    "локац",
-    "риск",
-    "процесс",
-    "безопас",
-)
-
 OUT_OF_SCOPE_REPLY = (
     "Я специализируюсь только на вопросах геологической безопасности "
     "и опасных геологических процессов Республики Адыгея."
 )
+logger = logging.getLogger(__name__)
 
 
 @ensure_csrf_cookie
@@ -79,57 +33,25 @@ def geogid_chat(request):
     if not question:
         return JsonResponse({"error": "Напишите вопрос для GeoChat."}, status=400)
 
-    if not is_allowed_topic(question, context):
-        return JsonResponse({"answer": OUT_OF_SCOPE_REPLY})
+    if not get_polza_api_key():
+        return JsonResponse(
+            {"error": "Не задан POLZA_API_KEY в файле .env."},
+            status=503,
+        )
 
     answer = ask_polza_ai(question, context)
     if not answer:
         return JsonResponse(
             {
                 "error": (
-                    "Не удалось получить ответ от нейросети"
+                    "GeoChat не смог связаться с Polza AI. "
+                    "Проверьте подключение к интернету и попробуйте ещё раз."
                 )
             },
             status=502,
         )
 
-    return JsonResponse({"answer": answer})
-
-
-def is_allowed_topic(question, context=None):
-    normalized = " ".join(
-        [
-            question,
-            str((context or {}).get("location", "")),
-            str((context or {}).get("topic", "")),
-        ]
-    ).casefold()
-    topic_words = ALLOWED_TOPICS + (
-        "каменномост",
-        "ополз",
-        "дерев",
-        "трещ",
-        "грунт",
-        "осып",
-        "дорог",
-        "покрыт",
-        "деформац",
-        "дом",
-        "столб",
-        "знак",
-        "кустар",
-        "рельеф",
-        "смещ",
-        "чрезвычай",
-        "ландшафт",
-        "инженер",
-        "прогноз",
-        "улавлива",
-        "покров",
-        "паден",
-        "поднож",
-    )
-    return any(topic in normalized for topic in topic_words)
+    return JsonResponse({"answer": answer, "mode": "ai"})
 
 
 def ask_polza_ai(question, context=None):
@@ -140,9 +62,7 @@ def ask_polza_ai(question, context=None):
     location = str(context.get("location") or "Лаго-Наки")
     topic = str(context.get("topic") or "геологическая безопасность")
 
-    body = {
-        "model": "sber/gigachat-plus",
-        "messages": [
+    messages = [
             {
                 "role": "system",
                 "content": (
@@ -161,29 +81,29 @@ def ask_polza_ai(question, context=None):
                 ),
             },
             {"role": "user", "content": question},
-        ],
-    }
-
-    request = urllib.request.Request(
-        "https://polza.ai/api/v1/chat/completions",
-        data=json.dumps(body).encode("utf-8"),
-        headers={
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json",
-        },
-        method="POST",
-    )
+        ]
 
     try:
-        with urllib.request.urlopen(request, timeout=25) as response:
-            data = json.loads(response.read().decode("utf-8"))
-    except (urllib.error.URLError, TimeoutError, json.JSONDecodeError):
+        from openai import OpenAI
+
+        client = OpenAI(
+            api_key=api_key,
+            base_url="https://polza.ai/api/v1",
+            timeout=25,
+            max_retries=1,
+        )
+        completion = client.chat.completions.create(
+            model="sber/gigachat-max",
+            messages=messages,
+            temperature=0.3,
+            max_tokens=500,
+        )
+        answer = completion.choices[0].message.content if completion.choices else ""
+    except Exception as error:
+        logger.warning("Polza AI request failed: %s", error)
         return None
 
-    try:
-        return clean_model_answer(data["choices"][0]["message"]["content"].strip())
-    except (KeyError, IndexError, TypeError):
-        return None
+    return clean_model_answer(str(answer or "").strip()) or None
 
 
 def clean_model_answer(answer):
@@ -200,7 +120,10 @@ def strip_markdown_markers(answer):
 
 
 def get_polza_api_key():
-    env_key = os.environ.get("POLZA_AI_API_KEY", "").strip()
+    env_key = (
+        os.environ.get("POLZA_API_KEY", "").strip()
+        or os.environ.get("POLZA_AI_API_KEY", "").strip()
+    )
     if env_key:
         return env_key
 
@@ -214,9 +137,12 @@ def get_polza_api_key():
             continue
 
         key, value = line.split("=", 1)
-        if key.strip() == "POLZA_AI_API_KEY":
+        if key.strip() in {"POLZA_API_KEY", "POLZA_AI_API_KEY"}:
             api_key = value.strip().strip('"').strip("'")
-            if api_key == "вставьте_ваш_api_ключ_сюда":
+            if api_key.casefold() in {
+                "вставьте_ваш_api_ключ_сюда",
+                "your_polza_api_key_here",
+            }:
                 return ""
             return api_key
 

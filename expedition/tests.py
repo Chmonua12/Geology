@@ -1,9 +1,11 @@
 import json
+import os
+from unittest.mock import patch
 
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
-from .views import OUT_OF_SCOPE_REPLY, is_allowed_topic
+from .views import get_polza_api_key
 
 
 @override_settings(STATICFILES_STORAGE="django.contrib.staticfiles.storage.StaticFilesStorage")
@@ -26,16 +28,30 @@ class ExpeditionViewTests(TestCase):
 
         self.assertEqual(response.status_code, 400)
 
-    def test_chat_keeps_unrelated_questions_out_of_scope(self):
+    def test_polza_key_supports_current_environment_name(self):
+        with patch.dict(os.environ, {"POLZA_API_KEY": "test-key"}, clear=True):
+            self.assertEqual(get_polza_api_key(), "test-key")
+
+    @patch("expedition.views.get_polza_api_key", return_value="test-key")
+    @patch("expedition.views.ask_polza_ai", return_value=None)
+    def test_chat_returns_error_instead_of_local_answer(self, _ask_ai, _get_key):
         response = self.client.post(
             reverse("geogid_chat"),
-            data=json.dumps({"message": "Как приготовить пирог?"}),
+            data=json.dumps({"message": "Почему оползень опасен?"}),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 502)
+        self.assertNotIn("answer", response.json())
+
+    @patch("expedition.views.get_polza_api_key", return_value="test-key")
+    @patch("expedition.views.ask_polza_ai", return_value="Ответ нейросети")
+    def test_chat_returns_only_ai_answer(self, _ask_ai, _get_key):
+        response = self.client.post(
+            reverse("geogid_chat"),
+            data=json.dumps({"message": "Почему оползень опасен?"}),
             content_type="application/json",
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json()["answer"], OUT_OF_SCOPE_REPLY)
-
-    def test_geology_questions_are_allowed(self):
-        self.assertTrue(is_allowed_topic("Почему оползень опасен после дождя?"))
-        self.assertFalse(is_allowed_topic("Какая сегодня футбольная игра?"))
+        self.assertEqual(response.json(), {"answer": "Ответ нейросети", "mode": "ai"})

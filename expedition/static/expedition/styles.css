@@ -150,6 +150,33 @@ body {
     gap: 10px;
 }
 
+.personal-expedition-action {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    width: 100%;
+    margin-top: 12px;
+    padding: 14px 17px;
+    border-radius: 12px;
+    color: #f8fff8;
+    background: #173f30;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 800;
+    transition: transform 180ms ease, background 180ms ease;
+}
+
+.personal-expedition-action:hover,
+.personal-expedition-action:focus-visible {
+    transform: translateY(-2px);
+    background: #245b45;
+}
+
+.personal-expedition-action span {
+    font-size: 19px;
+}
+
 .primary-action,
 .secondary-action {
     min-height: 48px;

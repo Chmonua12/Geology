@@ -1,0 +1,12 @@
+{
+  "name": "@geology/mcp-server",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun --watch src/api.ts",
+    "start": "bun src/api.ts",
+    "mcp": "bun src/mcp.ts",
+    "test": "bun test src"
+  },
+  "dependencies": {}
+}

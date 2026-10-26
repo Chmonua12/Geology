@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "geology": {
+      "command": "bun",
+      "args": ["run", "--cwd", "mcp-server", "mcp"],
+      "cwd": "C:\\full\\path\\to\\Geology",
+      "env": {
+        "GEOLOGY_API_URL": "http://127.0.0.1:3001"
+      }
+    }
+  }
+}

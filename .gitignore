@@ -8,3 +8,7 @@ staticfiles/
 .playwright-mcp/
 *.log
 /loca1.png
+node_modules/
+frontend/dist/
+mcp-server/data/
+.env.local

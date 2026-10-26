@@ -1,0 +1,18 @@
+{
+  "name": "geology-adaptive-expedition",
+  "private": true,
+  "packageManager": "bun@1.4.4",
+  "workspaces": [
+    "frontend",
+    "mcp-server"
+  ],
+  "scripts": {
+    "dev": "bun run scripts/dev.ts",
+    "dev:api": "bun run --cwd mcp-server dev",
+    "dev:frontend": "bun run --cwd frontend dev",
+    "mcp": "bun run --cwd mcp-server mcp",
+    "build": "bun run --cwd frontend build",
+    "test": "bun test mcp-server/src",
+    "check": "bun run test && bun run build"
+  }
+}

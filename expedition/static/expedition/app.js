@@ -212,6 +212,8 @@ const APP_STORAGE_VERSION = "ux-practicum-v2";
 const APP_STORAGE_VERSION_KEY = "geoshield-storage-version";
 const ACTIVE_SCREEN_KEY = "geoshield-active-screen-index";
 const METRICS_KEY = "geoshield-learning-metrics-v1";
+const LEARNER_ID_KEY = "geoshield-learner-id";
+const PERSONALIZATION_API_URL = "http://127.0.0.1:3001";
 const COMPLETION_KEYS = [
     "geoshield-lago-complete",
     "geoshield-kamennomostsky-complete",
@@ -230,6 +232,7 @@ function shuffleOptions(options) {
 
 resetProgressIfNeeded();
 const journeyMetrics = loadMetrics();
+const learnerId = getOrCreateLearnerId();
 
 const screens = [...document.querySelectorAll(".expedition-screen")];
 const track = document.querySelector("#expedition-track");
@@ -270,6 +273,7 @@ const experienceForm = document.querySelector("#experience-form");
 const experienceComment = document.querySelector("#experience-comment");
 const experienceStatus = document.querySelector("#experience-status");
 const restartExpeditionButton = document.querySelector("#restart-expedition");
+const personalExpeditionLink = document.querySelector("#personal-expedition-link");
 const feedbackTypingTimers = new WeakMap();
 const feedbackHideTimers = new WeakMap();
 let activeDecision = null;
@@ -313,6 +317,10 @@ setupRouteNavigation();
 setupOnboarding();
 restoreExperienceFeedback();
 updateResultSummary();
+if (personalExpeditionLink) {
+    personalExpeditionLink.href = `http://127.0.0.1:5173/?learner=${encodeURIComponent(learnerId)}`;
+}
+syncLearningProgress();
 
 certificateNameInput?.addEventListener("input", () => {
     const name = certificateNameInput.value.trim();
@@ -376,6 +384,7 @@ restartExpeditionButton?.addEventListener("click", () => {
     journeyMetrics.errors = 0;
     journeyMetrics.hints = 0;
     journeyMetrics.flappyRestarts = 0;
+    journeyMetrics.topicErrors = createEmptyTopicErrors();
     saveMetrics();
     window.location.reload();
 });
@@ -455,6 +464,7 @@ function loadMetrics() {
         rating: 0,
         comment: "",
         feedbackSavedAt: "",
+        topicErrors: createEmptyTopicErrors(),
     };
 
     try {
@@ -468,11 +478,60 @@ function loadMetrics() {
 function saveMetrics() {
     localStorage.setItem(METRICS_KEY, JSON.stringify(journeyMetrics));
     updateResultSummary();
+    syncLearningProgress();
 }
 
 function recordMetric(name, amount = 1) {
     journeyMetrics[name] = Number(journeyMetrics[name] || 0) + amount;
     saveMetrics();
+}
+
+function createEmptyTopicErrors() {
+    return { karst: 0, landslide: 0, rockfall: 0, protection: 0 };
+}
+
+function getOrCreateLearnerId() {
+    const stored = localStorage.getItem(LEARNER_ID_KEY);
+    if (stored) {
+        return stored;
+    }
+    const id = `student-${crypto.randomUUID().slice(0, 8)}`;
+    localStorage.setItem(LEARNER_ID_KEY, id);
+    return id;
+}
+
+function getTopicForScreen(screen) {
+    if (screen?.id?.includes("lago")) return "karst";
+    if (screen?.id?.includes("kamennomostsky")) return "landslide";
+    if (screen?.id?.includes("protection")) return "protection";
+    return "rockfall";
+}
+
+function recordTopicError(screen) {
+    const topic = getTopicForScreen(screen);
+    journeyMetrics.errors = Number(journeyMetrics.errors || 0) + 1;
+    journeyMetrics.topicErrors = { ...createEmptyTopicErrors(), ...(journeyMetrics.topicErrors || {}) };
+    journeyMetrics.topicErrors[topic] += 1;
+    saveMetrics();
+}
+
+function syncLearningProgress() {
+    const payload = {
+        learnerId,
+        completedStages: Math.max(getCompletedStageCount(), journeyMetrics.completedStages.length),
+        errors: Math.min(999, Number(journeyMetrics.errors || 0)),
+        hints: Math.min(999, Number(journeyMetrics.hints || 0)),
+        durationMinutes: Math.min(999, getJourneyDurationMinutes()),
+        topicErrors: { ...createEmptyTopicErrors(), ...(journeyMetrics.topicErrors || {}) },
+    };
+
+    fetch(`${PERSONALIZATION_API_URL}/api/progress`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+    }).catch(() => {
+        // Основная экспедиция продолжает работать, даже если локальный MCP API не запущен.
+    });
 }
 
 function setupOnboarding() {
@@ -495,6 +554,7 @@ function setupOnboarding() {
             journeyMetrics.errors = 0;
             journeyMetrics.hints = 0;
             journeyMetrics.flappyRestarts = 0;
+            journeyMetrics.topicErrors = createEmptyTopicErrors();
         }
         journeyMetrics.attempts += 1;
         journeyMetrics.startedAt = new Date().toISOString();
@@ -885,7 +945,7 @@ function loseFlappyGame(screen, reason) {
     }
 
     state.wrongAttempts.add(reason);
-    recordMetric("errors");
+    recordTopicError(screen);
     state.flappy.gameOver = true;
     pauseFlappy(screen);
     screen.classList.add("is-game-over");
@@ -1070,7 +1130,7 @@ function handleDecisionChoice(button) {
     if (!isCorrect) {
         button.classList.add("is-wrong");
         state.wrongAttempts.add(button.textContent.trim());
-        recordMetric("errors");
+        recordTopicError(screen);
         decisionHint.textContent = "Не совсем. Этот вариант относится к другой инженерной задаче.";
         return;
     }
@@ -1166,7 +1226,7 @@ function handleHotspotClick(screen, hotspot) {
     hotspot.classList.add("is-wrong");
     hotspot.querySelector(".hotspot-icon")?.classList.add("is-visible");
     state.wrongAttempts.add(label);
-    recordMetric("errors");
+    recordTopicError(screen);
     showFeedback(screen, "×", label, feedbackText, false, icon);
     const resetTimer = window.setTimeout(() => {
         hotspot.classList.remove("is-wrong");

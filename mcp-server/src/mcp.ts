@@ -10,6 +10,8 @@ const formProperties = {
 } as const;
 
 const tools = [
+  { name: "get_geodrone_results", description: "Получить результаты адаптивных мини-игр для анализа затруднений ученика.", inputSchema: { type: "object", properties: { learnerId: formProperties.learnerId }, required: ["learnerId"], additionalProperties: false } },
+  { name: "launch_geodrone_trial", description: "Запустить обучающую или экспертную GeoDrone-миссию на открытой странице ученика после подтверждения.", inputSchema: { type: "object", properties: { learnerId: formProperties.learnerId, topic: formProperties.topic, mode: { type: "string", enum: ["support", "challenge"] }, confirmed: {type:"boolean",const:true} }, required: ["learnerId","topic","mode","confirmed"], additionalProperties: false } },
   { name: "get_learning_progress", description: "Получить результаты прохождения ученика перед составлением персональной экспедиции.", inputSchema: { type: "object", properties: { learnerId: formProperties.learnerId }, required: ["learnerId"], additionalProperties: false } },
   { name: "fill_expedition_form", description: "Заполнить открытую на сайте форму следующей экспедиции. Пользователь увидит изменения в реальном времени и проверит их перед созданием маршрута.", inputSchema: { type: "object", properties: formProperties, required: Object.keys(formProperties), additionalProperties: false } },
   { name: "create_personal_expedition", description: "Создать персональную экспедицию только после явного подтверждения пользователем параметров формы.", inputSchema: { type: "object", properties: { ...formProperties, confirmed: { type: "boolean", const: true, description: "Явное подтверждение пользователя" } }, required: [...Object.keys(formProperties), "confirmed"], additionalProperties: false } },
@@ -23,6 +25,17 @@ async function callApi(path: string, init?: RequestInit) {
 }
 
 async function callTool(name: string, args: Record<string, unknown>) {
+  if (name === "get_geodrone_results") {
+    if (typeof args.learnerId !== "string") throw new Error("learnerId is required");
+    const data = await callApi("/api/trials/" + encodeURIComponent(args.learnerId));
+    return {content:[{type:"text",text:JSON.stringify(data.trials,null,2)}],structuredContent:data};
+  }
+  if (name === "launch_geodrone_trial") {
+    if (args.confirmed !== true) throw new Error("Сначала нужно подтверждение пользователя");
+    if (typeof args.learnerId !== "string" || typeof args.topic !== "string" || typeof args.mode !== "string") throw new Error("Invalid request");
+    const data = await callApi("/api/internal/trial", {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({learnerId:args.learnerId,topic:args.topic,mode:args.mode})});
+    return {content:[{type:"text",text:"Команда GeoDrone отправлена на подключённый сайт."}],structuredContent:data};
+  }
   if (name === "get_learning_progress") {
     if (typeof args.learnerId !== "string") throw new Error("learnerId is required");
     const data = await callApi(`/api/progress/${encodeURIComponent(args.learnerId)}`);

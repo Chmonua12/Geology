@@ -233,6 +233,7 @@ function shuffleOptions(options) {
 resetProgressIfNeeded();
 const journeyMetrics = loadMetrics();
 const geoTrial = window.GeoTrial?.create({ onResult: saveGeoTrialResult });
+connectGeoTrialMcp();
 const learnerId = getOrCreateLearnerId();
 
 const screens = [...document.querySelectorAll(".expedition-screen")];
@@ -495,6 +496,25 @@ function recordMetric(name, amount = 1) {
     journeyMetrics[name] = Number(journeyMetrics[name] || 0) + amount;
     if (name === "correctActions") geoTrial?.recordSuccess(getTopicForScreen(activeScreen));
     saveMetrics();
+}
+
+function connectGeoTrialMcp() {
+    // Подключается только к локальному Bun API, если он доступен.
+    if (!window.GeoTrial || window.location.hostname !== "127.0.0.1" && window.location.hostname !== "localhost") return;
+    const id = new URLSearchParams(window.location.search).get("learner")
+        || localStorage.getItem("geoshield-learner-id");
+    if (!id) return;
+    try {
+        const socket = new WebSocket("ws://127.0.0.1:3001/ws?learnerId=" + encodeURIComponent(id));
+        socket.addEventListener("message", event => {
+            try {
+                const message = JSON.parse(event.data);
+                if (message.type === "trial:launch" && message.payload) {
+                    geoTrial?.launch(message.payload.topic, message.payload.mode, "mcp");
+                }
+            } catch (error) { console.warn("GeoDrone WebSocket message", error); }
+        });
+    } catch (error) { console.warn("GeoDrone WebSocket unavailable", error); }
 }
 
 function saveGeoTrialResult(result) {

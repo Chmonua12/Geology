@@ -127,32 +127,28 @@
     dialog.className = "gr-dialog";
     dialog.setAttribute("aria-labelledby", "gr-title");
     dialog.innerHTML = [
-      '<div class="gr-shell">',
-      '<header class="gr-header"><div class="gr-brand"><span class="gr-brand-icon">✺</span><span>ГЕОШТАБ <small>/ ГЕОРАДАР</small></span></div><button type="button" class="gr-close" aria-label="Закрыть испытание">✕</button></header>',
-      '<div class="gr-body">',
-      '<section class="gr-aside"><span class="gr-kicker">УЧЕБНАЯ МИССИЯ</span><div class="gr-emblem" aria-hidden="true"><span>◎</span><i></i></div>',
-      '<span class="gr-level"></span><h2 id="gr-title"></h2><p class="gr-subtitle"></p>',
-      '<div class="gr-location"></div><div class="gr-progress"><span>ПРОГРЕСС</span><strong class="gr-count">1 / 2</strong></div><div class="gr-track"><span class="gr-fill"></span></div></section>',
-      '<section class="gr-play"><div class="gr-scene-head"><span class="gr-index">СИТУАЦИЯ 01</span><span class="gr-signal">● СИГНАЛ ПОЛУЧЕН</span></div>',
-      '<p class="gr-scene"></p><h3 class="gr-question"></h3><div class="gr-answers" role="group" aria-label="Варианты ответа"></div>',
-      '<div class="gr-feedback" role="status" aria-live="polite" hidden></div>',
-      '<div class="gr-footer"><button type="button" class="gr-hint">Нужна подсказка?</button>',
-      '<button type="button" class="gr-next" hidden>Следующая ситуация →</button></div>',
-      '</section></div></div>'
+      '<div class="gr-artboard">',
+      '<img class="gr-artwork" src="/static/expedition/georadar-frame.avif" alt="" aria-hidden="true" draggable="false">',
+      '<button type="button" class="gr-close" aria-label="Закрыть окно">×</button>',
+      '<section class="gr-panel">',
+      '<h2 id="gr-title" class="gr-question"></h2>',
+      '<div class="gr-answers" role="group" aria-label="Варианты ответа"></div>',
+      '<p class="gr-feedback" role="status" aria-live="polite" hidden></p>',
+      '<div class="gr-footer"><button type="button" class="gr-next" hidden>Следующий вопрос →</button></div>',
+      '</section></div>'
     ].join("");
     document.body.append(dialog);
 
     const el = selector => dialog.querySelector(selector);
     const closeButton = el(".gr-close");
     const nextButton = el(".gr-next");
-    const hintButton = el(".gr-hint");
     const feedback = el(".gr-feedback");
     const answersNode = el(".gr-answers");
     const manuallyOpen = document.createElement("button");
     manuallyOpen.className = "gr-launcher";
     manuallyOpen.type = "button";
-    manuallyOpen.textContent = "✺ ГеоРадар";
-    manuallyOpen.title = "Открыть обучающую мини-игру";
+    manuallyOpen.textContent = "✺ Доп. задание";
+    manuallyOpen.title = "Открыть дополнительное задание";
     document.body.append(manuallyOpen);
 
     const errorCounts = new Map();
@@ -192,14 +188,8 @@
       const round = game.mission.rounds[game.index];
       const total = game.mode === "support" ? 2 : 3;
       game.roundCorrect = false;
-      el(".gr-index").textContent = "СИТУАЦИЯ 0" + (game.index + 1);
-      el(".gr-scene").textContent = round.scene;
       el(".gr-question").textContent = round.question;
-      el(".gr-count").textContent = (game.index + 1) + " / " + total;
-      el(".gr-fill").style.width = Math.round((game.index / total) * 100) + "%";
       nextButton.hidden = true;
-      hintButton.hidden = false;
-      hintButton.disabled = false;
       feedback.hidden = true;
       feedback.className = "gr-feedback";
       answersNode.replaceChildren();
@@ -233,12 +223,10 @@
       answersNode.querySelectorAll("button").forEach(option => { option.disabled = true; });
       feedback.className = "gr-feedback is-correct";
       feedback.textContent = "Верно! " + round.fact;
-      hintButton.hidden = true;
       nextButton.hidden = false;
       const total = game.mode === "support" ? 2 : 3;
       if (game.index + 1 === total) {
         nextButton.textContent = "Завершить разведку ✓";
-        el(".gr-fill").style.width = "100%";
       } else nextButton.textContent = "Следующая ситуация →";
     }
 
@@ -261,11 +249,6 @@
         topic, mode, source, mission: missions[topic], index: 0,
         mistakes: 0, correct: 0, startedAt: Date.now(), roundCorrect: false, reported: false
       };
-      el("#gr-title").textContent = game.mission.title;
-      el(".gr-subtitle").textContent = game.mission.subtitle;
-      el(".gr-location").textContent = "⌾ " + game.mission.name;
-      el(".gr-emblem span").textContent = game.mission.symbol;
-      el(".gr-level").textContent = mode === "support" ? "РЕЖИМ: ТРЕНИРОВКА" : "РЕЖИМ: ЭКСПЕРТ";
       draw();
       dialog.showModal();
       closeButton.focus();
@@ -316,12 +299,6 @@
     }
 
     manuallyOpen.addEventListener("click", () => launch(currentTopic(), "support", "manual"));
-    hintButton.addEventListener("click", () => {
-      if (!game) return;
-      feedback.hidden = false;
-      feedback.className = "gr-feedback";
-      feedback.textContent = "Подсказка ГеоШтаба: " + game.mission.rounds[game.index].hint;
-    });
     closeButton.addEventListener("click", close);
     nextButton.addEventListener("click", step);
     dialog.addEventListener("cancel", event => { event.preventDefault(); close(); });

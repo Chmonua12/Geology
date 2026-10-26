@@ -233,8 +233,8 @@ function shuffleOptions(options) {
 resetProgressIfNeeded();
 const journeyMetrics = loadMetrics();
 const geoTrial = window.GeoTrial?.create({ onResult: saveGeoTrialResult });
-connectGeoTrialMcp();
 const learnerId = getOrCreateLearnerId();
+connectGeoTrialMcp();
 
 const screens = [...document.querySelectorAll(".expedition-screen")];
 const personalExpedition = getPersonalExpeditionConfig();

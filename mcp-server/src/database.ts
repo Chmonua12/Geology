@@ -19,6 +19,7 @@ db.exec(`
     payload TEXT NOT NULL,
     updated_at TEXT NOT NULL
   );
+  CREATE TABLE IF NOT EXISTS radar_results (id TEXT PRIMARY KEY, learner_id TEXT NOT NULL, payload TEXT NOT NULL, created_at TEXT NOT NULL);
   CREATE TABLE IF NOT EXISTS routes (
     id TEXT PRIMARY KEY,
     learner_id TEXT NOT NULL,
@@ -67,4 +68,18 @@ export function getLatestRoute(learnerId: string): PersonalRoute | null {
   const row = db.query("SELECT payload FROM routes WHERE learner_id = ? ORDER BY created_at DESC LIMIT 1")
     .get(learnerId) as { payload: string } | null;
   return row ? JSON.parse(row.payload) : null;
+}
+
+export function saveRadarResult(payload: Record<string, unknown> & { learnerId: string }) {
+  const id = crypto.randomUUID();
+  const createdAt = new Date().toISOString();
+  db.query("INSERT INTO radar_results (id, learner_id, payload, created_at) VALUES (?, ?, ?, ?)")
+    .run(id, payload.learnerId, JSON.stringify(payload), createdAt);
+  return { id, ...payload, createdAt };
+}
+
+export function getRadarResults(learnerId: string) {
+  const rows = db.query("SELECT payload, created_at FROM radar_results WHERE learner_id = ? ORDER BY created_at DESC LIMIT 30")
+    .all(learnerId) as { payload: string; created_at: string }[];
+  return rows.map(row => ({ ...JSON.parse(row.payload), createdAt: row.created_at }));
 }

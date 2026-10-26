@@ -1,5 +1,5 @@
 import { expeditionFormSchema, progressSchema } from "./contracts";
-import { getDraft, getLatestRoute, getProgress, saveDraft, saveProgress, saveRoute } from "./database";
+import { getDraft, getLatestRoute, getProgress, saveDraft, saveProgress, saveRoute, saveRadarResult, getRadarResults } from "./database";
 import { buildPersonalRoute } from "./taskBank";
 
 type SocketData = { learnerId: string };
@@ -62,6 +62,34 @@ const server = Bun.serve<SocketData>({
       return json(request, { progress }, 201);
     }
 
+    if (url.pathname === "/api/radar" && request.method === "POST") {
+      const data = await request.json().catch(() => null) as Record<string, unknown> | null;
+      if (!data || typeof data.learnerId !== "string" || data.learnerId.length < 3 || data.learnerId.length > 80
+        || !["karst", "landslide", "rockfall", "protection"].includes(String(data.topic))
+        || !["support", "challenge"].includes(String(data.mode))
+        || !["adaptive", "manual", "mcp"].includes(String(data.source))
+        || typeof data.completed !== "boolean"
+        || !Number.isInteger(data.correct) || Number(data.correct) < 0 || Number(data.correct) > 3
+        || !Number.isInteger(data.mistakes) || Number(data.mistakes) < 0 || Number(data.mistakes) > 999
+        || !Number.isInteger(data.durationSeconds) || Number(data.durationSeconds) < 0 || Number(data.durationSeconds) > 999) {
+        return json(request, { error: "Invalid radar result" }, 422);
+      }
+      return json(request, { result: saveRadarResult(data as Record<string, unknown> & {learnerId:string}) }, 201);
+    }
+    const radarMatch = url.pathname.match(/^\/api\/radar\/([^/]+)$/);
+    if (radarMatch && request.method === "GET") {
+      return json(request, { results: getRadarResults(decodeURIComponent(radarMatch[1])) });
+    }
+    if (url.pathname === "/api/internal/radar/launch" && request.method === "POST") {
+      const data = await request.json().catch(() => null) as Record<string, unknown> | null;
+      if (!data || typeof data.learnerId !== "string" || data.learnerId.length < 3 || data.learnerId.length > 80
+        || !["karst", "landslide", "rockfall", "protection"].includes(String(data.topic))
+        || !["support", "challenge"].includes(String(data.mode))) {
+        return json(request, {error:"Invalid radar mission"}, 422);
+      }
+      broadcast(data.learnerId, {type:"radar:launch", payload:{topic:data.topic,mode:data.mode}});
+      return json(request, {queued:true,topic:data.topic,mode:data.mode});
+    }
     const draftMatch = url.pathname.match(/^\/api\/draft\/([^/]+)$/);
     if (draftMatch && request.method === "GET") {
       const learnerId = decodeURIComponent(draftMatch[1]);

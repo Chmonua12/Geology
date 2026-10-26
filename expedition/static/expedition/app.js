@@ -232,7 +232,12 @@ function shuffleOptions(options) {
 
 resetProgressIfNeeded();
 const journeyMetrics = loadMetrics();
+const geoRadar = window.GeoRadar?.create({
+    onResult: saveGeoRadarResult,
+    getActiveTopic: () => getTopicForScreen(activeScreen),
+});
 const learnerId = getOrCreateLearnerId();
+connectGeoRadarMcp();
 
 const screens = [...document.querySelectorAll(".expedition-screen")];
 const personalExpedition = getPersonalExpeditionConfig();
@@ -492,7 +497,41 @@ function saveMetrics() {
 
 function recordMetric(name, amount = 1) {
     journeyMetrics[name] = Number(journeyMetrics[name] || 0) + amount;
+    if (name === "correctActions") geoRadar?.recordSuccess(getTopicForScreen(activeScreen));
     saveMetrics();
+}
+
+function connectGeoRadarMcp() {
+    // Локальный MCP-клиент подключается к Bun API; Render-сайт работает и без него.
+    if (window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") return;
+    try {
+        const socket = new WebSocket("ws://127.0.0.1:3001/ws?learnerId=" + encodeURIComponent(learnerId));
+        socket.addEventListener("message", event => {
+            try {
+                const message = JSON.parse(event.data);
+                if (message.type === "radar:launch" && message.payload) {
+                    geoRadar?.launch(message.payload.topic, message.payload.mode, "mcp");
+                }
+            } catch (error) { console.warn("GeoRadar: некорректное сообщение", error); }
+        });
+    } catch (error) { console.warn("GeoRadar MCP: нет соединения", error); }
+}
+
+function saveGeoRadarResult(result) {
+    try {
+        const storageKey = "geoshield-georadar-results-v1";
+        const entries = JSON.parse(localStorage.getItem(storageKey) || "[]");
+        entries.push({ ...result, at: new Date().toISOString() });
+        localStorage.setItem(storageKey, JSON.stringify(entries.slice(-30)));
+    } catch (error) { console.warn("GeoRadar: не удалось сохранить результат", error); }
+
+    // При локальной разработке результаты передаются в Bun/SQLite и доступны MCP.
+    if (window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") return;
+    fetch(PERSONALIZATION_API_URL + "/api/radar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ learnerId, ...result }),
+    }).catch(() => {});
 }
 
 function createEmptyTopicErrors() {
@@ -526,6 +565,7 @@ function recordTopicError(screen) {
     journeyMetrics.errors = Number(journeyMetrics.errors || 0) + 1;
     journeyMetrics.topicErrors = { ...createEmptyTopicErrors(), ...(journeyMetrics.topicErrors || {}) };
     journeyMetrics.topicErrors[topic] += 1;
+    geoRadar?.recordError(topic);
     saveMetrics();
 }
 

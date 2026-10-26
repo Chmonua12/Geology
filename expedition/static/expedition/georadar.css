@@ -1,53 +1,243 @@
-/* ГеоРадар — дополнительное интерактивное задание */
-.gr-dialog{width:min(960px,calc(100vw - 24px));max-width:960px;max-height:95dvh;border:0;padding:0;border-radius:25px;overflow:auto;background:#082c3d;color:#f1fffa;box-shadow:0 32px 110px #061b27d9;font-family:system-ui,-apple-system,Segoe UI,sans-serif}
-.gr-dialog::backdrop{background:#071522b8;backdrop-filter:blur(8px)}
-.gr-shell{border:1px solid #a0eed66a;border-radius:25px;overflow:hidden;background:linear-gradient(145deg,#082c3e,#0c3543 50%,#153b43)}
-.gr-header{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:17px 23px;border-bottom:1px solid #b7f7e12b;background:#ffffff07}
-.gr-brand{display:flex;align-items:center;gap:12px;font-size:13px;font-weight:900;letter-spacing:.14em;color:#d8ffe9}
-.gr-brand small{color:#87bea9;letter-spacing:.1em}.gr-brand-icon{display:grid;place-items:center;width:33px;height:33px;font-size:24px;color:#112e36;background:#90eabe;border-radius:10px}
-.gr-close{width:38px;height:38px;border:1px solid #ffffff52;border-radius:50%;background:#ffffff14;color:#fff;font-size:16px;cursor:pointer}
-.gr-close:focus-visible,.gr-next:focus-visible,.gr-answer:focus-visible,.gr-hint:focus-visible,.gr-launcher:focus-visible{outline:3px solid #afffd3;outline-offset:2px}
-.gr-body{display:grid;grid-template-columns:minmax(240px,.85fr) minmax(310px,1.15fr);gap:0}
-.gr-aside{position:relative;isolation:isolate;padding:30px 30px 32px;background:radial-gradient(circle at 50% 45%,#448a7766,transparent 60%),linear-gradient(135deg,#133c4e,#07313f);display:flex;flex-direction:column;align-items:flex-start;min-height:460px}
-.gr-kicker{font-size:11px;font-weight:900;letter-spacing:.16em;color:#88e8c3}
-.gr-emblem{align-self:center;position:relative;display:grid;place-items:center;width:160px;height:160px;margin:5px 0 12px;border-radius:50%;border:1px solid #82e5ce7d;background:repeating-radial-gradient(circle,#7cdeb51c 0,#7cdeb51c 1px,transparent 2px,transparent 21px),radial-gradient(circle,#6dd4aa21 15%,transparent 75%);box-shadow:inset 0 0 0 14px #95ecbb09,0 0 55px #6cddaf33}
-.gr-emblem:before,.gr-emblem:after{content:"";position:absolute;background:#76e1bf55}
-.gr-emblem:before{height:1px;width:92%}.gr-emblem:after{width:1px;height:92%}
-.gr-emblem span{font-size:62px;line-height:1;color:#d3ffe7;z-index:2;text-shadow:0 3px 16px #90eeb7}
-.gr-emblem i{position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 0deg,#a3ffcb25,transparent 75%,transparent);animation:gr-radar 5s linear infinite}
-@keyframes gr-radar{to{transform:rotate(360deg)}}
-.gr-level{color:#baf5ca;font-size:10px;letter-spacing:.15em;font-weight:900;margin-bottom:6px}
-.gr-aside h2{margin:0;font-size:clamp(25px,3vw,34px);line-height:1.1;letter-spacing:-.04em;color:white}
-.gr-subtitle{font-size:14px;line-height:1.6;color:#c1dcdf;margin:10px 0 0}
-.gr-location{font-size:13px;color:#b7f6da;margin-top:15px}
-.gr-progress{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;margin-top:auto;padding-top:23px;font-size:11px;letter-spacing:.1em;font-weight:800;color:#b7e9dd}
-.gr-count{font-size:17px;letter-spacing:0;color:white}
-.gr-track{height:8px;width:100%;background:#ffffff24;border-radius:99px;overflow:hidden;margin-top:10px}
-.gr-fill{display:block;height:100%;width:0;background:linear-gradient(90deg,#5fc7d2,#a9efae);border-radius:99px;transition:width .28s}
-.gr-play{padding:34px 32px;display:flex;flex-direction:column;min-height:460px}
-.gr-scene-head{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center;font-size:11px;font-weight:900;letter-spacing:.12em;color:#b6efd4}
-.gr-signal{color:#83c2b3}
-.gr-scene{font-size:14px;line-height:1.55;color:#c5dbdf;margin:36px 0 8px}
-.gr-question{font-size:clamp(20px,2.5vw,28px);line-height:1.22;letter-spacing:-.025em;color:white;margin:0 0 22px}
-.gr-answers{display:grid;gap:11px}
-.gr-answer{border:1px solid #b8e6d54b;border-radius:14px;background:#ffffff0c;color:#f5fffa;padding:17px 19px;text-align:left;font-family:inherit;font-size:14px;line-height:1.45;cursor:pointer;min-height:58px;transition:border-color .15s,background .15s,transform .15s}
-.gr-answer:enabled:hover{background:#ffffff1a;border-color:#a8edd0;transform:translateY(-1px)}
-.gr-answer.is-correct{background:#76dbaa30;border-color:#9bf1bb;color:#d9ffe6}
-.gr-answer.is-wrong{background:#ffb98522;border-color:#eab89c;color:#fff0e2}
-.gr-answer:disabled{cursor:default;opacity:.8}
-.gr-feedback{margin-top:14px;padding:13px 14px;border:1px solid #86e1c94a;border-radius:12px;font-size:13px;line-height:1.55;color:#e4f6ed;background:#85e5bd15}
-.gr-feedback.is-wrong{border-color:#ffbd9660;background:#ffa96c1a}
-.gr-feedback.is-correct{border-color:#91edc086;background:#5cb77b2c}
-.gr-footer{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-top:auto;padding-top:18px}
-.gr-hint{border:0;background:none;color:#95e8d2;font-size:13px;text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:10px 0}
-.gr-next{padding:13px 17px;border:0;border-radius:12px;background:#a6efca;color:#073c37;font-size:13px;font-weight:900;cursor:pointer}
-.gr-next:hover{background:#d4f9df}
-.gr-launcher{position:fixed;z-index:500;bottom:20px;left:20px;border:1px solid #d4fff0a8;background:#0e4554;color:#effff4;border-radius:999px;padding:11px 16px;box-shadow:0 6px 22px #102f4370;font:800 13px system-ui,sans-serif;letter-spacing:.025em;cursor:pointer}
-.gr-launcher:hover{background:#156779}
-.gr-dialog [hidden]{display:none!important}
-@media(max-width:720px){.gr-body{grid-template-columns:1fr}.gr-aside{min-height:0;padding:19px 22px}.gr-emblem{width:76px;height:76px;margin:5px 0 9px}.gr-emblem span{font-size:32px}.gr-aside h2{font-size:24px}.gr-subtitle{margin-top:6px;font-size:13px}.gr-location{margin-top:6px}.gr-progress{padding-top:13px}.gr-play{min-height:0;padding:22px}.gr-scene{margin:18px 0 7px}.gr-question{font-size:21px;margin-bottom:15px}.gr-answer{padding:12px 14px;min-height:48px;font-size:13px}.gr-launcher{bottom:84px;left:10px;padding:10px 13px;font-size:12px}.gr-header{padding:11px 17px}.gr-brand{font-size:11px}}
-@media(max-width:440px){.gr-aside{padding:14px 17px}.gr-emblem{display:none}.gr-play{padding:15px 17px}.gr-scene{margin-top:10px}.gr-header{padding:8px 14px}.gr-dialog{max-height:96dvh}}
-@media(prefers-reduced-motion:reduce){.gr-emblem i{animation:none}.gr-fill,.gr-answer{transition:none}}
-
-/* Не перекрывать вводный экран экспедиции. */
-body:has(.onboarding:not([hidden])) .gr-launcher{display:none}
+/* ГеоРадар: иллюстрированное окно с HTML-вопросами поверх прозрачной картинки. */
+.gr-dialog {
+  position: fixed;
+  width: min(1040px, 98vw);
+  max-width: none;
+  max-height: min(96dvh, 760px);
+  margin: auto;
+  padding: 0;
+  overflow: visible;
+  border: 0;
+  color: #18342c;
+  background: transparent;
+  box-shadow: none;
+  font-family: "Manrope", system-ui, sans-serif;
+}
+.gr-dialog::backdrop {
+  background: rgba(4, 20, 15, 0.78);
+  backdrop-filter: blur(9px);
+}
+.gr-artboard {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  isolation: isolate;
+  filter: drop-shadow(0 25px 40px rgba(0, 20, 13, .44));
+}
+.gr-artwork {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+}
+.gr-close {
+  position: absolute;
+  z-index: 5;
+  top: 14.5%;
+  right: 8%;
+  display: grid;
+  place-items: center;
+  width: clamp(32px, 4.4vw, 46px);
+  height: clamp(32px, 4.4vw, 46px);
+  border: 2px solid #a2eec2;
+  border-radius: 50%;
+  background: #043f34;
+  color: #fff;
+  font: 700 24px/1 system-ui, sans-serif;
+  cursor: pointer;
+  transition: background .18s, transform .18s;
+}
+.gr-close:hover { background: #077a50; transform: rotate(90deg); }
+.gr-panel {
+  position: absolute;
+  z-index: 2;
+  inset: 28.5% 12.5% 18.5% 12.5%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  min-width: 0;
+  gap: clamp(10px, 1.5vw, 16px);
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #6bb991 transparent;
+  padding: 6px 9px;
+}
+.gr-question {
+  margin: 0;
+  color: #103d30;
+  font-size: clamp(20px, 2.6vw, 31px);
+  line-height: 1.17;
+  font-weight: 900;
+  text-wrap: balance;
+  text-align: center;
+  letter-spacing: -.035em;
+}
+.gr-answers {
+  display: grid;
+  gap: clamp(8px, 1.05vw, 12px);
+  width: 100%;
+}
+.gr-answer {
+  position: relative;
+  width: 100%;
+  min-height: clamp(49px, 5.5vw, 61px);
+  padding: 10px 52px 10px 20px;
+  border: 2px solid #b2d7bd;
+  border-radius: 18px;
+  background: rgba(255, 255, 250, .97);
+  color: #18372c;
+  box-shadow: 0 4px 0 #cadfca, 0 6px 17px rgba(32, 85, 47, .08);
+  font: 700 clamp(13px, 1.7vw, 17px)/1.3 "Manrope",system-ui,sans-serif;
+  text-align: left;
+  cursor: pointer;
+  transform-origin: center;
+  transition: border-color .17s, box-shadow .17s, background .17s, transform .17s;
+  -webkit-tap-highlight-color: transparent;
+}
+.gr-answer::after {
+  content: "›";
+  position: absolute;
+  right: 17px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #679880;
+  font-size: 25px;
+  line-height: 1;
+  font-weight: 800;
+}
+.gr-answer:enabled:hover {
+  border-color: #2eae79;
+  background: #ecfff4;
+  box-shadow: 0 4px 0 #b8dec2, 0 10px 22px rgba(32, 128, 83, .16);
+  transform: translateY(-2px);
+}
+.gr-answer:enabled:active { transform: translateY(2px) scale(.985); box-shadow: 0 1px 0 #b8dec2; }
+.gr-answer:focus-visible, .gr-close:focus-visible, .gr-next:focus-visible, .gr-launcher:focus-visible {
+  outline: 3px solid #249c65;
+  outline-offset: 3px;
+}
+.gr-answer.is-correct {
+  background: #d7f7dd;
+  border-color: #1d9b62;
+  color: #075337;
+  box-shadow: 0 4px 0 #8dd6a6, 0 0 0 5px rgba(95,218,128,.16);
+  animation: gr-correct-pop .47s cubic-bezier(.18,.8,.24,1.2) both;
+}
+.gr-answer.is-correct::after { content: "✓"; color: #12874d; }
+.gr-answer.is-wrong {
+  border-color: #e5a28d;
+  background: #fff0e8;
+  color: #87442f;
+  box-shadow: 0 4px 0 #e9c3b6;
+  animation: gr-wrong-shake .39s cubic-bezier(.36,.07,.19,.97) both;
+}
+.gr-answer.is-wrong::after { content: "×"; color: #c96049; }
+.gr-answer:disabled:not(.is-correct, .is-wrong) { opacity: .55; cursor: default; }
+.gr-feedback {
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: rgba(215, 245, 223, .84);
+  color: #13583a;
+  font: 600 12px/1.45 system-ui,sans-serif;
+  animation: gr-soft-appear .2s ease-out both;
+}
+.gr-feedback.is-wrong { background: #fff0e8; color: #8e533c; }
+.gr-footer { display: flex; justify-content: center; }
+.gr-next {
+  min-height: 34px;
+  padding: 7px 17px;
+  border: 0;
+  border-radius: 100px;
+  background: #0b7a50;
+  color: white;
+  font: 800 13px/1.2 system-ui,sans-serif;
+  cursor: pointer;
+  box-shadow: 0 4px 0 #055a3a;
+}
+.gr-next:enabled:hover { background: #0a955d; }
+.gr-launcher {
+  position: fixed;
+  z-index: 500;
+  left: 18px;
+  bottom: 20px;
+  border: 1px solid #b7e9cd;
+  border-radius: 999px;
+  background: #105640;
+  padding: 11px 16px;
+  color: white;
+  box-shadow: 0 8px 24px #0a2b2770;
+  font: 800 13px/1.2 system-ui,sans-serif;
+  cursor: pointer;
+}
+.gr-launcher:hover { background: #0e7750; }
+.gr-dialog [hidden] { display: none !important; }
+body:has(.onboarding:not([hidden])) .gr-launcher { display: none; }
+@keyframes gr-correct-pop {
+  0% { transform: scale(.96); }
+  55% { transform: scale(1.035); }
+  75% { transform: scale(.995); }
+  100% { transform: scale(1); }
+}
+@keyframes gr-wrong-shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-5px); }
+  40%, 80% { transform: translateX(5px); }
+}
+@keyframes gr-soft-appear {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (max-width: 660px) {
+  .gr-dialog { width: min(440px, 96vw); max-height: 94dvh; overflow: visible; }
+  .gr-artboard {
+    aspect-ratio: auto;
+    min-height: min(590px, 91dvh);
+    padding: 115px 22px 66px;
+    background: linear-gradient(150deg, #07543e, #003f31);
+    border: 3px solid #087a52;
+    border-radius: 28px;
+  }
+  .gr-artwork {
+    position: absolute;
+    top: -3%;
+    left: 0;
+    width: 100%;
+    height: 46%;
+    object-fit: cover;
+    object-position: top center;
+    border-radius: 24px 24px 0 0;
+    pointer-events: none;
+  }
+  .gr-artboard::before {
+    content: "";
+    position: absolute;
+    inset: 95px 14px 18px;
+    border-radius: 24px;
+    background: #fffaf0;
+    box-shadow: 0 0 0 2px #dcead9;
+  }
+  .gr-close { top: 18px; right: 18px; width: 38px; height: 38px; }
+  .gr-panel {
+    position: relative;
+    inset: auto;
+    z-index: 3;
+    padding: 4px;
+    max-height: calc(91dvh - 210px);
+    gap: 16px;
+    overflow: auto;
+  }
+  .gr-question { font-size: clamp(19px, 5vw, 25px); text-align: left; }
+  .gr-answer { font-size: 14px; min-height: 57px; padding: 10px 41px 10px 13px; border-radius: 15px; }
+  .gr-answer::after { right: 13px; }
+}
+@media (max-width: 380px) {
+  .gr-artboard { padding: 105px 15px 45px; min-height: min(570px, 91dvh); }
+  .gr-artboard::before { inset: 90px 9px 12px; }
+  .gr-panel { max-height: calc(91dvh - 160px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gr-answer,.gr-feedback,.gr-close { transition: none; animation: none !important; }
+}

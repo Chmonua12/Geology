@@ -232,6 +232,7 @@ function shuffleOptions(options) {
 
 resetProgressIfNeeded();
 const journeyMetrics = loadMetrics();
+const geoTrial = window.GeoTrial?.create({ onResult: saveGeoTrialResult });
 const learnerId = getOrCreateLearnerId();
 
 const screens = [...document.querySelectorAll(".expedition-screen")];
@@ -492,7 +493,24 @@ function saveMetrics() {
 
 function recordMetric(name, amount = 1) {
     journeyMetrics[name] = Number(journeyMetrics[name] || 0) + amount;
+    if (name === "correctActions") geoTrial?.recordSuccess(getTopicForScreen(activeScreen));
     saveMetrics();
+}
+
+function saveGeoTrialResult(result) {
+    try {
+        const storageKey = "geoshield-geotrial-results-v1";
+        const entries = JSON.parse(localStorage.getItem(storageKey) || "[]");
+        entries.push({ ...result, at: new Date().toISOString() });
+        localStorage.setItem(storageKey, JSON.stringify(entries.slice(-50)));
+    } catch (error) {
+        console.warn("Не удалось сохранить результат георазведки", error);
+    }
+    fetch(PERSONALIZATION_API_URL + "/api/trials", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ learnerId, ...result }),
+    }).catch(() => {});
 }
 
 function createEmptyTopicErrors() {
@@ -526,6 +544,7 @@ function recordTopicError(screen) {
     journeyMetrics.errors = Number(journeyMetrics.errors || 0) + 1;
     journeyMetrics.topicErrors = { ...createEmptyTopicErrors(), ...(journeyMetrics.topicErrors || {}) };
     journeyMetrics.topicErrors[topic] += 1;
+    geoTrial?.recordError(topic);
     saveMetrics();
 }
 

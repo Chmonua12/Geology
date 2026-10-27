@@ -333,6 +333,7 @@ setupGalleries();
 setupRouteNavigation();
 setupOnboarding();
 restoreExperienceFeedback();
+void loadExperienceFeedback();
 updateResultSummary();
 restoreFinalResults();
 if (personalExpeditionLink) {
@@ -375,7 +376,7 @@ quickQuestionList.querySelectorAll("button").forEach((button) => {
     });
 });
 
-experienceForm?.addEventListener("submit", (event) => {
+experienceForm?.addEventListener("submit", async (event) => {
     event.preventDefault();
     const rating = Number(new FormData(experienceForm).get("rating"));
     if (!rating) {
@@ -383,11 +384,43 @@ experienceForm?.addEventListener("submit", (event) => {
         return;
     }
 
+    const submitButton = experienceForm.querySelector('button[type="submit"]');
+    submitButton.disabled = true;
+    experienceStatus.textContent = "Сохраняем отзыв…";
     journeyMetrics.rating = rating;
     journeyMetrics.comment = experienceComment.value.trim();
-    journeyMetrics.feedbackSavedAt = new Date().toISOString();
-    saveMetrics();
-    experienceStatus.textContent = "Спасибо! Оценка сохранена в этом браузере.";
+    try {
+        const response = await fetch("/api/feedback/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCookie("csrftoken"),
+            },
+            body: JSON.stringify({
+                rating,
+                comment: journeyMetrics.comment,
+                metrics: {
+                    completedStages: Math.max(getCompletedStageCount(), journeyMetrics.completedStages.length),
+                    durationMinutes: getJourneyDurationMinutes(),
+                    errors: Number(journeyMetrics.errors || 0),
+                    hints: Number(journeyMetrics.hints || 0),
+                },
+            }),
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+            throw new Error(data.error || "Не удалось сохранить отзыв.");
+        }
+        journeyMetrics.feedbackSavedAt = data.feedback?.updatedAt || new Date().toISOString();
+        saveMetrics();
+        experienceStatus.textContent = "Спасибо! Отзыв сохранён.";
+    } catch (error) {
+        experienceStatus.textContent = error instanceof Error
+            ? error.message
+            : "Не удалось сохранить отзыв. Попробуйте ещё раз.";
+    } finally {
+        submitButton.disabled = false;
+    }
 });
 
 finalResultsForm?.addEventListener("submit", (event) => {
@@ -750,6 +783,27 @@ function restoreExperienceFeedback() {
     experienceComment.value = journeyMetrics.comment || "";
     if (journeyMetrics.feedbackSavedAt) {
         experienceStatus.textContent = "Ваша предыдущая оценка сохранена.";
+    }
+}
+
+async function loadExperienceFeedback() {
+    if (!experienceForm) {
+        return;
+    }
+    try {
+        const response = await fetch("/api/feedback/");
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || !data.feedback) {
+            return;
+        }
+        journeyMetrics.rating = Number(data.feedback.rating || 0);
+        journeyMetrics.comment = String(data.feedback.comment || "");
+        journeyMetrics.feedbackSavedAt = String(data.feedback.updatedAt || "");
+        localStorage.setItem(METRICS_KEY, JSON.stringify(journeyMetrics));
+        restoreExperienceFeedback();
+        experienceStatus.textContent = "Ваш предыдущий отзыв загружен.";
+    } catch (error) {
+        // Локальная копия остаётся доступной, если сервер временно недоступен.
     }
 }
 

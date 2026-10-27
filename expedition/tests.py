@@ -6,6 +6,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
+from .models import ExperienceFeedback
 from .views import get_polza_api_key
 
 
@@ -73,6 +74,46 @@ class ExpeditionViewTests(TestCase):
         self.assertTrue(correct.json()["learnerId"].startswith("student-"))
         self.assertEqual(logged_out.status_code, 200)
         self.assertNotIn("_auth_user_id", self.client.session)
+
+    def test_feedback_is_saved_and_updated_for_account(self):
+        user = get_user_model().objects.create_user("Ученик", password="secret12")
+        self.client.force_login(user)
+        first = self.client.post(
+            reverse("experience_feedback"),
+            data=json.dumps({
+                "rating": 4,
+                "comment": "Добавить больше подсказок",
+                "metrics": {
+                    "completedStages": 4,
+                    "durationMinutes": 9,
+                    "errors": 2,
+                    "hints": 1,
+                },
+            }),
+            content_type="application/json",
+        )
+        second = self.client.post(
+            reverse("experience_feedback"),
+            data=json.dumps({"rating": 5, "comment": "Всё понятно"}),
+            content_type="application/json",
+        )
+        restored = self.client.get(reverse("experience_feedback"))
+
+        self.assertEqual(first.status_code, 201)
+        self.assertEqual(second.status_code, 200)
+        self.assertEqual(ExperienceFeedback.objects.count(), 1)
+        self.assertEqual(restored.json()["feedback"]["rating"], 5)
+        self.assertEqual(restored.json()["feedback"]["comment"], "Всё понятно")
+        self.assertTrue(restored.json()["feedback"]["learnerId"].startswith("student-"))
+
+    def test_feedback_requires_account(self):
+        response = self.client.post(
+            reverse("experience_feedback"),
+            data=json.dumps({"rating": 5, "comment": "Хорошо"}),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 401)
 
     @override_settings(
         GEOLOGY_API_URL="https://mcp.example.test",

@@ -10,7 +10,9 @@ from django.utils.crypto import salted_hmac
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.views.decorators.csrf import ensure_csrf_cookie
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_http_methods, require_POST
+
+from .models import ExperienceFeedback
 
 
 OUT_OF_SCOPE_REPLY = (
@@ -120,6 +122,69 @@ def login_account(request):
 def logout_account(request):
     logout(request)
     return JsonResponse({"ok": True})
+
+
+def _feedback_json(feedback):
+    return {
+        "learnerId": feedback.learner_id,
+        "rating": feedback.rating,
+        "comment": feedback.comment,
+        "metrics": feedback.metrics,
+        "updatedAt": feedback.updated_at.isoformat(),
+    }
+
+
+@require_http_methods(["GET", "POST"])
+def experience_feedback(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "Войдите в аккаунт."}, status=401)
+
+    if request.method == "GET":
+        feedback = ExperienceFeedback.objects.filter(user=request.user).first()
+        return JsonResponse({"feedback": _feedback_json(feedback) if feedback else None})
+
+    try:
+        payload = json.loads(request.body.decode("utf-8"))
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return JsonResponse({"error": "Некорректные данные."}, status=400)
+
+    try:
+        rating = int(payload.get("rating", 0))
+    except (TypeError, ValueError):
+        rating = 0
+    if rating not in range(1, 6):
+        return JsonResponse({"error": "Выберите оценку от 1 до 5."}, status=400)
+
+    comment = str(payload.get("comment", "")).strip()
+    if len(comment) > 240:
+        return JsonResponse({"error": "Комментарий слишком длинный."}, status=400)
+
+    raw_metrics = payload.get("metrics") if isinstance(payload.get("metrics"), dict) else {}
+
+    def safe_metric(key):
+        try:
+            value = int(raw_metrics.get(key, 0) or 0)
+        except (TypeError, ValueError):
+            value = 0
+        return max(0, min(999, value))
+
+    metrics = {
+        key: safe_metric(key)
+        for key in ("completedStages", "durationMinutes", "errors", "hints")
+    }
+    feedback, created = ExperienceFeedback.objects.update_or_create(
+        user=request.user,
+        defaults={
+            "learner_id": learner_id_for_user(request.user),
+            "rating": rating,
+            "comment": comment,
+            "metrics": metrics,
+        },
+    )
+    return JsonResponse(
+        {"ok": True, "feedback": _feedback_json(feedback)},
+        status=201 if created else 200,
+    )
 
 
 @require_POST

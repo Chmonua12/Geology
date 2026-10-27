@@ -8,6 +8,7 @@
   ],
   "scripts": {
     "dev": "bun run scripts/dev.ts",
+    "dev:django": "python manage.py runserver 127.0.0.1:8000",
     "dev:api": "bun run --cwd mcp-server dev",
     "dev:frontend": "bun run --cwd frontend dev",
     "mcp": "bun run --cwd mcp-server mcp",

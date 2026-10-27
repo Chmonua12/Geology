@@ -598,7 +598,7 @@
     <script src="{% static 'expedition/auth.js' %}?v=auth-1"></script>
     {% if user.is_authenticated %}
     <script>
-        window.GEORADAR_ARTWORK_URL = "{% static 'expedition/georadar-window.png' %}";
+        window.GEORADAR_ARTWORK_URL = "{% static 'expedition/georadar-window.png' %}?v=2";
     </script>
     <script src="{% static 'expedition/georadar.js' %}?v=window-4"></script>
     <script src="{% static 'expedition/app.js' %}?v=auth-1"></script>

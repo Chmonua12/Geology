@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: geology-mcp
+    runtime: node
+    plan: free
+    buildCommand: bun install && VITE_SITE_URL=https://geology-0en5.onrender.com bun run build
+    startCommand: bun run --cwd mcp-server start
+    healthCheckPath: /api/health
+    envVars:
+      - key: BUN_VERSION
+        value: 1.4.4
+      - key: GEOLOGY_APP_URL
+        value: https://geology-0en5.onrender.com/
+      - key: ALLOWED_ORIGINS
+        value: https://geology-0en5.onrender.com
+      - key: POLZA_API_KEY
+        sync: false
+      - key: MCP_AUTH_TOKEN
+        generateValue: true

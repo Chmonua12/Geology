@@ -3,7 +3,9 @@ import { mkdirSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import type { ExpeditionForm, LearningProgress, PersonalRoute } from "./contracts";
 
-const databasePath = resolve(import.meta.dir, "../data/geology.sqlite");
+const databasePath = process.env.GEOLOGY_DB_PATH
+  ? resolve(process.env.GEOLOGY_DB_PATH)
+  : resolve(import.meta.dir, "../data/geology.sqlite");
 mkdirSync(dirname(databasePath), { recursive: true });
 
 const db = new Database(databasePath, { create: true, strict: true });

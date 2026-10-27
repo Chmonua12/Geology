@@ -284,7 +284,6 @@ const restartExpeditionButton = document.querySelector("#restart-expedition");
 const personalExpeditionLink = document.querySelector("#personal-expedition-link");
 const finalResultsForm = document.querySelector("#final-results-form");
 const finalResultsLearnerId = document.querySelector("#final-results-learner-id");
-const finalResultsState = document.querySelector("#final-results-state");
 const finalResultsStatus = document.querySelector("#final-results-status");
 const saveFinalResultsButton = document.querySelector("#save-final-results");
 const feedbackTypingTimers = new WeakMap();
@@ -400,7 +399,6 @@ finalResultsForm?.addEventListener("submit", (event) => {
 
     const savedResult = { ...currentFinalResults, savedAt: new Date().toISOString() };
     localStorage.setItem(FINAL_RESULTS_KEY, JSON.stringify(savedResult));
-    finalResultsState.textContent = "Сохранено";
     finalResultsStatus.textContent = "Итоговый разбор сохранён в этом браузере.";
 });
 
@@ -565,10 +563,9 @@ function fillFinalResultsForm(result, restored = false) {
 
     finalResultsForm.classList.add("is-filled");
     saveFinalResultsButton.disabled = false;
-    finalResultsState.textContent = restored ? "Сохранено" : "Заполнено MCP";
     finalResultsStatus.textContent = restored
         ? "Сохранённый итоговый разбор восстановлен."
-        : "MCP заполнил форму. Проверьте результат и сохраните его.";
+        : "";
 }
 
 function restoreFinalResults() {

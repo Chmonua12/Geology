@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Монолит Адыгеи — Лаго-Наки</title>
     <link rel="stylesheet" href="{% static 'expedition/styles.css' %}?v=ux-practicum-20261025">
-    <link rel="stylesheet" href="{% static 'expedition/georadar.css' %}?v=illustrated-2">
+    <link rel="stylesheet" href="{% static 'expedition/georadar.css' %}?v=window-2">
 </head>
 <body>
     <a class="skip-link" href="#screen-lago">Перейти к экспедиции</a>
@@ -457,6 +457,40 @@
                     <strong id="certificate-name-output">Ваше имя</strong>
                 </div>
             </div>
+
+            <form class="mcp-final-form" id="final-results-form" aria-labelledby="final-results-title">
+                <header class="mcp-final-header">
+                    <div>
+                        <p class="mcp-final-eyebrow">Итоги прохождения · MCP + Polza AI</p>
+                        <h2 id="final-results-title">Персональный разбор экспедиции</h2>
+                        <p>Попросите MCP подвести итоги для ученика <code id="final-results-learner-id">—</code>. Числа берутся из игры, а нейросеть формулирует вывод.</p>
+                    </div>
+                    <span class="mcp-final-state" id="final-results-state">Ожидает заполнения</span>
+                </header>
+
+                <div class="mcp-final-metrics">
+                    <label><span>Время</span><input name="durationMinutes" type="text" value="—" readonly></label>
+                    <label><span>Этапы</span><input name="completedStages" type="text" value="—" readonly></label>
+                    <label><span>Ошибки</span><input name="errors" type="text" value="—" readonly></label>
+                    <label><span>Подсказки</span><input name="hints" type="text" value="—" readonly></label>
+                </div>
+
+                <div class="mcp-final-details">
+                    <label><span>Сильная тема</span><input name="strongTopic" type="text" placeholder="Заполнит MCP" readonly></label>
+                    <label><span>Стоит повторить</span><input name="focusTopic" type="text" placeholder="Заполнит MCP" readonly></label>
+                    <label><span>Итоговый уровень</span><input name="level" type="text" placeholder="Заполнит MCP" readonly></label>
+                </div>
+
+                <label class="mcp-final-summary">
+                    <span>Комментарий по прохождению</span>
+                    <textarea name="summary" rows="3" maxlength="500" placeholder="Здесь появится персональный вывод нейросети" readonly></textarea>
+                </label>
+
+                <div class="mcp-final-actions">
+                    <button class="primary-action compact" id="save-final-results" type="submit" disabled>Сохранить разбор</button>
+                    <p id="final-results-status" aria-live="polite">Откройте сайт и вызовите инструмент MCP <code>fill_final_results</code>.</p>
+                </div>
+            </form>
         </section>
 
         <section class="route-section" id="route-next">
@@ -542,7 +576,7 @@
         <p class="guide-model-note">Используется модель GigaChat — мультимодальная нейросеть, разработанная компанией «Сбер»</p>
     </aside>
 
-    <script src="{% static 'expedition/georadar.js' %}?v=illustrated-2"></script>
-    <script src="{% static 'expedition/app.js' %}?v=georadar-1"></script>
+    <script src="{% static 'expedition/georadar.js' %}?v=window-2"></script>
+    <script src="{% static 'expedition/app.js' %}?v=mcp-final-results-1"></script>
 </body>
 </html>

@@ -1,18 +1,19 @@
 import json
 import logging
 import os
+import urllib.error
+import urllib.request
 
 from django.contrib.auth import authenticate, get_user_model, login, logout
 from django.conf import settings
 from django.contrib.auth.hashers import make_password
 from django.db import IntegrityError
 from django.utils.crypto import salted_hmac
+from django.utils import timezone
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.views.decorators.csrf import ensure_csrf_cookie
-from django.views.decorators.http import require_http_methods, require_POST
-
-from .models import ExperienceFeedback
+from django.views.decorators.http import require_POST
 
 
 OUT_OF_SCOPE_REPLY = (
@@ -124,24 +125,10 @@ def logout_account(request):
     return JsonResponse({"ok": True})
 
 
-def _feedback_json(feedback):
-    return {
-        "learnerId": feedback.learner_id,
-        "rating": feedback.rating,
-        "comment": feedback.comment,
-        "metrics": feedback.metrics,
-        "updatedAt": feedback.updated_at.isoformat(),
-    }
-
-
-@require_http_methods(["GET", "POST"])
+@require_POST
 def experience_feedback(request):
     if not request.user.is_authenticated:
         return JsonResponse({"error": "Войдите в аккаунт."}, status=401)
-
-    if request.method == "GET":
-        feedback = ExperienceFeedback.objects.filter(user=request.user).first()
-        return JsonResponse({"feedback": _feedback_json(feedback) if feedback else None})
 
     try:
         payload = json.loads(request.body.decode("utf-8"))
@@ -172,19 +159,41 @@ def experience_feedback(request):
         key: safe_metric(key)
         for key in ("completedStages", "durationMinutes", "errors", "hints")
     }
-    feedback, created = ExperienceFeedback.objects.update_or_create(
-        user=request.user,
-        defaults={
-            "learner_id": learner_id_for_user(request.user),
-            "rating": rating,
-            "comment": comment,
-            "metrics": metrics,
-        },
+    if not settings.FEEDBACK_WEBHOOK_URL:
+        return JsonResponse(
+            {"error": "Хранилище отзывов пока не настроено."},
+            status=503,
+        )
+
+    saved_at = timezone.now().isoformat()
+    webhook_payload = {
+        "token": settings.FEEDBACK_WEBHOOK_TOKEN,
+        "savedAt": saved_at,
+        "name": request.user.username,
+        "learnerId": learner_id_for_user(request.user),
+        "rating": rating,
+        "comment": comment,
+        **metrics,
+    }
+    webhook_request = urllib.request.Request(
+        settings.FEEDBACK_WEBHOOK_URL,
+        data=json.dumps(webhook_payload, ensure_ascii=False).encode("utf-8"),
+        headers={"Content-Type": "application/json"},
+        method="POST",
     )
-    return JsonResponse(
-        {"ok": True, "feedback": _feedback_json(feedback)},
-        status=201 if created else 200,
-    )
+    try:
+        with urllib.request.urlopen(webhook_request, timeout=15) as response:
+            result = json.loads(response.read().decode("utf-8"))
+        if not result.get("ok"):
+            raise ValueError(str(result.get("error") or "Google Sheets rejected feedback"))
+    except (OSError, ValueError, json.JSONDecodeError) as error:
+        logger.warning("Feedback webhook failed: %s", error)
+        return JsonResponse(
+            {"error": "Не удалось сохранить отзыв. Попробуйте ещё раз."},
+            status=502,
+        )
+
+    return JsonResponse({"ok": True, "savedAt": saved_at}, status=201)
 
 
 @require_POST

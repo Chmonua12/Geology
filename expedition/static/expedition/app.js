@@ -281,7 +281,6 @@ const experienceForm = document.querySelector("#experience-form");
 const experienceComment = document.querySelector("#experience-comment");
 const experienceStatus = document.querySelector("#experience-status");
 const restartExpeditionButton = document.querySelector("#restart-expedition");
-const personalExpeditionLink = document.querySelector("#personal-expedition-link");
 const finalResultsForm = document.querySelector("#final-results-form");
 const finalResultsLearnerId = document.querySelector("#final-results-learner-id");
 const finalResultsStatus = document.querySelector("#final-results-status");
@@ -333,12 +332,8 @@ setupGalleries();
 setupRouteNavigation();
 setupOnboarding();
 restoreExperienceFeedback();
-void loadExperienceFeedback();
 updateResultSummary();
 restoreFinalResults();
-if (personalExpeditionLink) {
-    personalExpeditionLink.href = `${PERSONALIZATION_FORM_URL}/?learner=${encodeURIComponent(learnerId)}`;
-}
 syncLearningProgress();
 
 certificateNameInput?.addEventListener("input", () => {
@@ -411,7 +406,7 @@ experienceForm?.addEventListener("submit", async (event) => {
         if (!response.ok) {
             throw new Error(data.error || "Не удалось сохранить отзыв.");
         }
-        journeyMetrics.feedbackSavedAt = data.feedback?.updatedAt || new Date().toISOString();
+        journeyMetrics.feedbackSavedAt = data.savedAt || new Date().toISOString();
         saveMetrics();
         experienceStatus.textContent = "Спасибо! Отзыв сохранён.";
     } catch (error) {
@@ -783,27 +778,6 @@ function restoreExperienceFeedback() {
     experienceComment.value = journeyMetrics.comment || "";
     if (journeyMetrics.feedbackSavedAt) {
         experienceStatus.textContent = "Ваша предыдущая оценка сохранена.";
-    }
-}
-
-async function loadExperienceFeedback() {
-    if (!experienceForm) {
-        return;
-    }
-    try {
-        const response = await fetch("/api/feedback/");
-        const data = await response.json().catch(() => ({}));
-        if (!response.ok || !data.feedback) {
-            return;
-        }
-        journeyMetrics.rating = Number(data.feedback.rating || 0);
-        journeyMetrics.comment = String(data.feedback.comment || "");
-        journeyMetrics.feedbackSavedAt = String(data.feedback.updatedAt || "");
-        localStorage.setItem(METRICS_KEY, JSON.stringify(journeyMetrics));
-        restoreExperienceFeedback();
-        experienceStatus.textContent = "Ваш предыдущий отзыв загружен.";
-    } catch (error) {
-        // Локальная копия остаётся доступной, если сервер временно недоступен.
     }
 }
 

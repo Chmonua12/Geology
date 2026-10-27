@@ -6,7 +6,6 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
-from .models import ExperienceFeedback
 from .views import get_polza_api_key
 
 
@@ -25,6 +24,7 @@ class ExpeditionViewTests(TestCase):
         self.assertContains(response, "ID:")
         self.assertNotContains(response, "Итоги прохождения · MCP + Polza AI")
         self.assertNotContains(response, "Заполнено MCP")
+        self.assertNotContains(response, "Настроить персональную экспедицию")
         self.assertContains(response, "Пройти ещё раз")
         self.assertContains(response, "Выйти")
         self.assertContains(response, "data-learner-id=\"student-")
@@ -75,10 +75,16 @@ class ExpeditionViewTests(TestCase):
         self.assertEqual(logged_out.status_code, 200)
         self.assertNotIn("_auth_user_id", self.client.session)
 
-    def test_feedback_is_saved_and_updated_for_account(self):
+    @override_settings(
+        FEEDBACK_WEBHOOK_URL="https://script.google.test/feedback",
+        FEEDBACK_WEBHOOK_TOKEN="secret-token",
+    )
+    @patch("expedition.views.urllib.request.urlopen")
+    def test_feedback_is_sent_to_google_sheets(self, urlopen):
+        urlopen.return_value.__enter__.return_value.read.return_value = b'{"ok": true}'
         user = get_user_model().objects.create_user("Ученик", password="secret12")
         self.client.force_login(user)
-        first = self.client.post(
+        response = self.client.post(
             reverse("experience_feedback"),
             data=json.dumps({
                 "rating": 4,
@@ -92,19 +98,26 @@ class ExpeditionViewTests(TestCase):
             }),
             content_type="application/json",
         )
-        second = self.client.post(
+
+        self.assertEqual(response.status_code, 201)
+        sent_request = urlopen.call_args.args[0]
+        sent_data = json.loads(sent_request.data.decode("utf-8"))
+        self.assertEqual(sent_data["token"], "secret-token")
+        self.assertEqual(sent_data["name"], "Ученик")
+        self.assertEqual(sent_data["rating"], 4)
+        self.assertEqual(sent_data["errors"], 2)
+        self.assertTrue(sent_data["learnerId"].startswith("student-"))
+
+    def test_feedback_requires_configured_storage(self):
+        user = get_user_model().objects.create_user("Ученик", password="secret12")
+        self.client.force_login(user)
+        response = self.client.post(
             reverse("experience_feedback"),
-            data=json.dumps({"rating": 5, "comment": "Всё понятно"}),
+            data=json.dumps({"rating": 5, "comment": "Хорошо"}),
             content_type="application/json",
         )
-        restored = self.client.get(reverse("experience_feedback"))
 
-        self.assertEqual(first.status_code, 201)
-        self.assertEqual(second.status_code, 200)
-        self.assertEqual(ExperienceFeedback.objects.count(), 1)
-        self.assertEqual(restored.json()["feedback"]["rating"], 5)
-        self.assertEqual(restored.json()["feedback"]["comment"], "Всё понятно")
-        self.assertTrue(restored.json()["feedback"]["learnerId"].startswith("student-"))
+        self.assertEqual(response.status_code, 503)
 
     def test_feedback_requires_account(self):
         response = self.client.post(

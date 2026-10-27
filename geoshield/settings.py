@@ -85,3 +85,6 @@ GEOLOGY_FORM_URL = os.environ.get(
     "GEOLOGY_FORM_URL",
     DEFAULT_GEOLOGY_SERVICE_URL if os.environ.get("RENDER") else "http://127.0.0.1:5173",
 ).rstrip("/")
+
+FEEDBACK_WEBHOOK_URL = os.environ.get("FEEDBACK_WEBHOOK_URL", "").strip()
+FEEDBACK_WEBHOOK_TOKEN = os.environ.get("FEEDBACK_WEBHOOK_TOKEN", "").strip()

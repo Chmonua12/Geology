@@ -91,6 +91,17 @@ python manage.py migrate --noinput && gunicorn geoshield.wsgi:application
 
 Чтобы аккаунты не исчезали после перезапуска Render, к Django-сервису нужно подключить постоянный диск по пути `/var/data` и добавить переменную `SQLITE_PATH=/var/data/db.sqlite3`.
 
+### Отзывы в Google Таблице
+
+Готовый Apps Script находится в `docs/google_feedback.gs`. Его нужно вставить в Apps Script, открытый из нужной Google Таблицы, добавить свойство сценария `FEEDBACK_TOKEN` и опубликовать как веб-приложение от имени владельца с доступом для всех. В Render задаются две переменные:
+
+```text
+FEEDBACK_WEBHOOK_URL=https://script.google.com/macros/s/.../exec
+FEEDBACK_WEBHOOK_TOKEN=то_же_секретное_значение
+```
+
+После этого оценка, комментарий, ID ученика и учебные метрики добавляются в лист `Отзывы`. Адрес и секрет Google Apps Script не передаются в браузер.
+
 Для полной проверки проекта:
 
 ```powershell

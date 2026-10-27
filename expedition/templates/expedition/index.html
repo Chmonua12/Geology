@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="{% static 'expedition/styles.css' %}?v=ux-practicum-20261025">
     <link rel="stylesheet" href="{% static 'expedition/georadar.css' %}?v=window-2">
 </head>
-<body>
+<body data-api-url="{{ geology_api_url }}" data-form-url="{{ geology_form_url }}">
     <a class="skip-link" href="#screen-lago">Перейти к экспедиции</a>
 
     <section class="onboarding" id="onboarding" aria-labelledby="onboarding-title">
@@ -445,7 +445,7 @@
                             <button class="primary-action compact" type="submit">Сохранить оценку</button>
                             <button class="secondary-action compact" id="restart-expedition" type="button">Пройти ещё раз</button>
                         </div>
-                        <a class="personal-expedition-action" id="personal-expedition-link" href="http://127.0.0.1:5173/" target="_blank" rel="noreferrer">
+                        <a class="personal-expedition-action" id="personal-expedition-link" href="{{ geology_form_url }}/" target="_blank" rel="noreferrer">
                             Настроить персональную экспедицию <span aria-hidden="true">→</span>
                         </a>
                         <p class="form-status" id="experience-status" aria-live="polite"></p>
@@ -577,6 +577,6 @@
     </aside>
 
     <script src="{% static 'expedition/georadar.js' %}?v=window-2"></script>
-    <script src="{% static 'expedition/app.js' %}?v=mcp-final-results-1"></script>
+    <script src="{% static 'expedition/app.js' %}?v=render-mcp-1"></script>
 </body>
 </html>

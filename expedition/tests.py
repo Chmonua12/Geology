@@ -17,6 +17,8 @@ class ExpeditionViewTests(TestCase):
         self.assertContains(response, "Начать экспедицию")
         self.assertContains(response, "Мой результат")
         self.assertContains(response, "Насколько понятным был маршрут?")
+        self.assertContains(response, "Персональный разбор экспедиции")
+        self.assertContains(response, "fill_final_results")
         self.assertContains(response, "Пройти ещё раз")
 
     def test_chat_rejects_empty_question(self):

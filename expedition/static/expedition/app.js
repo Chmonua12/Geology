@@ -213,6 +213,7 @@ const APP_STORAGE_VERSION_KEY = "geoshield-storage-version";
 const ACTIVE_SCREEN_KEY = "geoshield-active-screen-index";
 const METRICS_KEY = "geoshield-learning-metrics-v1";
 const LEARNER_ID_KEY = "geoshield-learner-id";
+const FINAL_RESULTS_KEY = "geoshield-final-results-v1";
 const PERSONALIZATION_API_URL = "http://127.0.0.1:3001";
 const COMPLETION_KEYS = [
     "geoshield-lago-complete",
@@ -281,11 +282,17 @@ const experienceComment = document.querySelector("#experience-comment");
 const experienceStatus = document.querySelector("#experience-status");
 const restartExpeditionButton = document.querySelector("#restart-expedition");
 const personalExpeditionLink = document.querySelector("#personal-expedition-link");
+const finalResultsForm = document.querySelector("#final-results-form");
+const finalResultsLearnerId = document.querySelector("#final-results-learner-id");
+const finalResultsState = document.querySelector("#final-results-state");
+const finalResultsStatus = document.querySelector("#final-results-status");
+const saveFinalResultsButton = document.querySelector("#save-final-results");
 const feedbackTypingTimers = new WeakMap();
 const feedbackHideTimers = new WeakMap();
 let activeDecision = null;
 let activeFlappyScreen = null;
 let activeFlappyGroup = null;
+let currentFinalResults = null;
 
 if (personalExpedition?.hintMode === "off") {
     guideOpen.hidden = true;
@@ -328,6 +335,7 @@ setupRouteNavigation();
 setupOnboarding();
 restoreExperienceFeedback();
 updateResultSummary();
+restoreFinalResults();
 if (personalExpeditionLink) {
     personalExpeditionLink.href = `http://127.0.0.1:5173/?learner=${encodeURIComponent(learnerId)}`;
 }
@@ -383,9 +391,23 @@ experienceForm?.addEventListener("submit", (event) => {
     experienceStatus.textContent = "Спасибо! Оценка сохранена в этом браузере.";
 });
 
+finalResultsForm?.addEventListener("submit", (event) => {
+    event.preventDefault();
+    if (!currentFinalResults) {
+        finalResultsStatus.textContent = "Сначала заполните форму через MCP.";
+        return;
+    }
+
+    const savedResult = { ...currentFinalResults, savedAt: new Date().toISOString() };
+    localStorage.setItem(FINAL_RESULTS_KEY, JSON.stringify(savedResult));
+    finalResultsState.textContent = "Сохранено";
+    finalResultsStatus.textContent = "Итоговый разбор сохранён в этом браузере.";
+});
+
 restartExpeditionButton?.addEventListener("click", () => {
     COMPLETION_KEYS.forEach((key) => localStorage.removeItem(key));
     localStorage.removeItem("geoshield-certificate-complete");
+    localStorage.removeItem(FINAL_RESULTS_KEY);
     localStorage.setItem(ACTIVE_SCREEN_KEY, "0");
     journeyMetrics.attempts += 1;
     journeyMetrics.startedAt = new Date().toISOString();
@@ -512,9 +534,56 @@ function connectGeoRadarMcp() {
                 if (message.type === "radar:launch" && message.payload) {
                     geoRadar?.launch(message.payload.topic, message.payload.mode, "mcp");
                 }
+                if (message.type === "final-results:fill" && message.payload) {
+                    fillFinalResultsForm(message.payload);
+                }
             } catch (error) { console.warn("GeoRadar: некорректное сообщение", error); }
         });
     } catch (error) { console.warn("GeoRadar MCP: нет соединения", error); }
+}
+
+function fillFinalResultsForm(result, restored = false) {
+    if (!finalResultsForm || !result || typeof result !== "object") {
+        return;
+    }
+
+    const setValue = (name, value) => {
+        const field = finalResultsForm.elements.namedItem(name);
+        if (field) field.value = String(value ?? "");
+    };
+
+    currentFinalResults = result;
+    setValue("durationMinutes", `${Number(result.durationMinutes) || 0} мин`);
+    setValue("completedStages", `${Number(result.completedStages) || 0}/${COMPLETION_KEYS.length}`);
+    setValue("errors", Number(result.errors) || 0);
+    setValue("hints", Number(result.hints) || 0);
+    setValue("strongTopic", result.strongTopic);
+    setValue("focusTopic", result.focusTopic);
+    setValue("level", result.level);
+    setValue("summary", result.summary);
+
+    finalResultsForm.classList.add("is-filled");
+    saveFinalResultsButton.disabled = false;
+    finalResultsState.textContent = restored ? "Сохранено" : "Заполнено MCP";
+    finalResultsStatus.textContent = restored
+        ? "Сохранённый итоговый разбор восстановлен."
+        : "MCP заполнил форму. Проверьте результат и сохраните его.";
+}
+
+function restoreFinalResults() {
+    if (!finalResultsForm) {
+        return;
+    }
+
+    finalResultsLearnerId.textContent = learnerId;
+    try {
+        const stored = JSON.parse(localStorage.getItem(FINAL_RESULTS_KEY) || "null");
+        if (stored?.learnerId === learnerId) {
+            fillFinalResultsForm(stored, true);
+        }
+    } catch (error) {
+        localStorage.removeItem(FINAL_RESULTS_KEY);
+    }
 }
 
 function saveGeoRadarResult(result) {
@@ -565,7 +634,9 @@ function recordTopicError(screen) {
     journeyMetrics.errors = Number(journeyMetrics.errors || 0) + 1;
     journeyMetrics.topicErrors = { ...createEmptyTopicErrors(), ...(journeyMetrics.topicErrors || {}) };
     journeyMetrics.topicErrors[topic] += 1;
-    geoRadar?.recordError(topic);
+    if (!screen?.classList.contains("flappy-screen")) {
+        geoRadar?.recordError(topic);
+    }
     saveMetrics();
 }
 

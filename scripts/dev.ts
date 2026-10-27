@@ -1,4 +1,5 @@
 const commands = [
+  [process.env.GEOLOGY_PYTHON || (process.platform === "win32" ? "python" : "python3"), "manage.py", "runserver", "127.0.0.1:8000"],
   [process.execPath, "run", "--cwd", "mcp-server", "dev"],
   [process.execPath, "run", "--cwd", "frontend", "dev"],
 ];

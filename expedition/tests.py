@@ -21,6 +21,16 @@ class ExpeditionViewTests(TestCase):
         self.assertContains(response, "fill_final_results")
         self.assertContains(response, "Пройти ещё раз")
 
+    @override_settings(
+        GEOLOGY_API_URL="https://mcp.example.test",
+        GEOLOGY_FORM_URL="https://mcp.example.test",
+    )
+    def test_index_exposes_remote_mcp_service_urls(self):
+        response = self.client.get(reverse("index"))
+
+        self.assertContains(response, 'data-api-url="https://mcp.example.test"')
+        self.assertContains(response, 'data-form-url="https://mcp.example.test"')
+
     def test_chat_rejects_empty_question(self):
         response = self.client.post(
             reverse("geogid_chat"),

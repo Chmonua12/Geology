@@ -275,7 +275,6 @@ const reinforcementDescription = document.querySelector("#reinforcement-descript
 const certificateNameInput = document.querySelector("#certificate-name-input");
 const certificateNameOutput = document.querySelector("#certificate-name-output");
 const onboarding = document.querySelector("#onboarding");
-const onboardingProgress = document.querySelector("#onboarding-progress");
 const startExpeditionButton = document.querySelector("#start-expedition");
 const resumeExpeditionButton = document.querySelector("#resume-expedition");
 const experienceForm = document.querySelector("#experience-form");
@@ -608,6 +607,11 @@ function createEmptyTopicErrors() {
 }
 
 function getOrCreateLearnerId() {
+    const accountId = document.body.dataset.learnerId?.trim();
+    if (accountId) {
+        localStorage.setItem(LEARNER_ID_KEY, accountId);
+        return accountId;
+    }
     const queryId = new URLSearchParams(window.location.search).get("learner")?.trim();
     if (queryId) {
         localStorage.setItem(LEARNER_ID_KEY, queryId);
@@ -666,9 +670,6 @@ function setupOnboarding() {
     }
     const completed = getCompletedStageCount();
     const hasProgress = completed > 0 || Number(localStorage.getItem(ACTIVE_SCREEN_KEY) || 0) > 0;
-    onboardingProgress.textContent = hasProgress
-        ? `Сохранён прогресс: ${completed} из ${COMPLETION_KEYS.length} учебных этапов.`
-        : "Прогресс пока не начат.";
     resumeExpeditionButton.hidden = !hasProgress;
     startExpeditionButton.textContent = hasProgress ? "Начать заново" : "Начать экспедицию";
 

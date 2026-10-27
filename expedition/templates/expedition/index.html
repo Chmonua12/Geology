@@ -4,33 +4,49 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Монолит Адыгеи — Лаго-Наки</title>
-    <link rel="stylesheet" href="{% static 'expedition/styles.css' %}?v=ux-practicum-20261025">
-    <link rel="stylesheet" href="{% static 'expedition/georadar.css' %}?v=window-2">
+    <title>Интерактивный учебный маршрут</title>
+    <link rel="stylesheet" href="{% static 'expedition/styles.css' %}?v=auth-1">
+    <link rel="stylesheet" href="{% static 'expedition/georadar.css' %}?v=window-3">
 </head>
-<body data-api-url="{{ geology_api_url }}" data-form-url="{{ geology_form_url }}">
+<body data-api-url="{{ geology_api_url }}" data-form-url="{{ geology_form_url }}" data-learner-id="{{ learner_id }}">
     <a class="skip-link" href="#screen-lago">Перейти к экспедиции</a>
 
-    <section class="onboarding" id="onboarding" aria-labelledby="onboarding-title">
+    <section class="auth-gate" id="auth-gate" {% if user.is_authenticated %}hidden{% endif %}>
+        <form class="auth-card" id="auth-form">
+            {% csrf_token %}
+            <h1>Вход</h1>
+            <label>
+                <span>Имя</span>
+                <input name="name" type="text" minlength="2" maxlength="40" autocomplete="username" required>
+            </label>
+            <label>
+                <span>Пароль</span>
+                <input name="password" type="password" minlength="6" maxlength="128" autocomplete="current-password" required>
+            </label>
+            <div class="auth-actions">
+                <button class="primary-action" type="submit" value="login">Войти</button>
+                <button class="secondary-action" type="submit" value="register">Регистрация</button>
+            </div>
+            <p class="auth-status" id="auth-status" role="status" aria-live="polite"></p>
+        </form>
+    </section>
+
+    <section class="onboarding" id="onboarding" aria-labelledby="onboarding-title" {% if not user.is_authenticated %}hidden{% endif %}>
         <div class="onboarding-card">
-            <p class="onboarding-eyebrow">Интерактивный учебный маршрут</p>
-            <h1 id="onboarding-title">Монолит Адыгеи</h1>
-            <p class="onboarding-lead">Научитесь замечать признаки карста, оползней и обвалов, а затем подберите меры защиты для опасных участков.</p>
+            <h1 id="onboarding-title">Интерактивный учебный маршрут</h1>
             <dl class="onboarding-facts">
                 <div><dt>Формат</dt><dd>5 этапов с обратной связью</dd></div>
                 <div><dt>Время</dt><dd>8–12 минут</dd></div>
                 <div><dt>Результат</dt><dd>Сертификат и личная статистика</dd></div>
             </dl>
-            <p class="onboarding-progress" id="onboarding-progress" aria-live="polite"></p>
             <div class="onboarding-actions">
                 <button class="primary-action" id="start-expedition" type="button">Начать экспедицию</button>
                 <button class="secondary-action" id="resume-expedition" type="button" hidden>Продолжить</button>
             </div>
-            <p class="onboarding-note">Прогресс хранится только в этом браузере. Его можно сбросить после прохождения.</p>
         </div>
     </section>
 
-    <main class="expedition-track" id="expedition-track">
+    <main class="expedition-track" id="expedition-track" {% if not user.is_authenticated %}hidden{% endif %}>
         <section class="location-screen expedition-screen screen-lago"
                  id="screen-lago"
                  data-location="Лаго-Наки"
@@ -368,7 +384,7 @@
 
             <div class="flappy-hud" aria-live="polite">
                 <div class="task-chip flappy-mission">
-                    <span>Помогите коту Вжуху ехать только по геологически безопасной дороге Республики Адыгея</span>
+                    <span>Помогите котику ехать только по геологически безопасной дороге Республики Адыгея</span>
                 </div>
                 <div class="sign-counter flappy-counter" aria-label="Счётчик собранных фото">
                     <span class="counter-orb" aria-hidden="true"></span>
@@ -394,7 +410,7 @@
                  data-topic="награждение за прохождение мини-обучения по геологической безопасности"
                  data-required="1"
                  data-storage-key="geoshield-certificate-complete"
-                 aria-label="Сертификат Монолита Адыгеи">
+                 aria-label="Сертификат юного специалиста">
             <nav class="route-map certificate-route-map route-map-stage-5" data-stage="5" aria-label="Маршрут экспедиции">
                 <div class="route-line" aria-hidden="true">
                     <span class="route-fill"></span>
@@ -411,8 +427,7 @@
 
             <div class="certificate-panel">
                 <div class="certificate-copy">
-                    <h1>Сертификат юного специалиста Монолита</h1>
-                    <p>Введите имя, чтобы оформить награду за прохождение мини-обучения по геологической безопасности.</p>
+                    <h1>Сертификат юного специалиста</h1>
                     <label class="certificate-name-field">
                         <span>Имя участника</span>
                         <input id="certificate-name-input" type="text" maxlength="28" placeholder="Введите имя" autocomplete="off">
@@ -453,7 +468,7 @@
                 </div>
 
                 <div class="certificate-preview" aria-label="Предпросмотр сертификата">
-                    <img src="{% static 'images/sert.png' %}" alt="Сертификат Монолита Адыгеи">
+                    <img src="{% static 'images/sert.png' %}" alt="Сертификат юного специалиста">
                     <strong id="certificate-name-output">Ваше имя</strong>
                 </div>
             </div>
@@ -537,9 +552,13 @@
         </section>
     </div>
 
+    {% if user.is_authenticated %}
     <button class="guide-fab" id="guide-open" type="button" aria-label="Открыть GeoChat">
         <img src="{% static 'images/GigaChat.png' %}" alt="" aria-hidden="true">
     </button>
+
+    <button class="logout-button" id="logout-button" type="button">Выйти</button>
+    {% endif %}
 
     <div class="guide-backdrop" id="guide-backdrop" hidden></div>
 
@@ -576,7 +595,13 @@
         <p class="guide-model-note">Используется модель GigaChat — мультимодальная нейросеть, разработанная компанией «Сбер»</p>
     </aside>
 
-    <script src="{% static 'expedition/georadar.js' %}?v=window-2"></script>
-    <script src="{% static 'expedition/app.js' %}?v=render-mcp-1"></script>
+    <script src="{% static 'expedition/auth.js' %}?v=auth-1"></script>
+    {% if user.is_authenticated %}
+    <script>
+        window.GEORADAR_ARTWORK_URL = "{% static 'expedition/georadar-window.png' %}";
+    </script>
+    <script src="{% static 'expedition/georadar.js' %}?v=window-4"></script>
+    <script src="{% static 'expedition/app.js' %}?v=auth-1"></script>
+    {% endif %}
 </body>
 </html>

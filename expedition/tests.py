@@ -2,6 +2,7 @@ import json
 import os
 from unittest.mock import patch
 
+from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
@@ -11,6 +12,8 @@ from .views import get_polza_api_key
 @override_settings(STATICFILES_STORAGE="django.contrib.staticfiles.storage.StaticFilesStorage")
 class ExpeditionViewTests(TestCase):
     def test_index_contains_learning_entry_and_feedback(self):
+        user = get_user_model().objects.create_user("Мила", password="secret12")
+        self.client.force_login(user)
         response = self.client.get(reverse("index"))
 
         self.assertEqual(response.status_code, 200)
@@ -20,12 +23,62 @@ class ExpeditionViewTests(TestCase):
         self.assertContains(response, "Персональный разбор экспедиции")
         self.assertContains(response, "fill_final_results")
         self.assertContains(response, "Пройти ещё раз")
+        self.assertContains(response, "Выйти")
+        self.assertContains(response, "data-learner-id=\"student-")
+
+    def test_anonymous_index_shows_short_auth_form(self):
+        response = self.client.get(reverse("index"))
+
+        self.assertContains(response, '<section class="auth-gate"', html=False)
+        self.assertContains(response, "Регистрация")
+        self.assertNotContains(response, "expedition/app.js")
+
+    def test_registration_hashes_password_and_assigns_distinct_ids(self):
+        first = self.client.post(
+            reverse("register_account"),
+            data=json.dumps({"name": "Алина", "password": "secret12"}),
+            content_type="application/json",
+        )
+        first_id = first.json()["learnerId"]
+        self.client.post(reverse("logout_account"))
+        second = self.client.post(
+            reverse("register_account"),
+            data=json.dumps({"name": "Борис", "password": "secret34"}),
+            content_type="application/json",
+        )
+
+        self.assertEqual(first.status_code, 201)
+        self.assertEqual(second.status_code, 201)
+        self.assertNotEqual(first_id, second.json()["learnerId"])
+        self.assertTrue(get_user_model().objects.get(username="Алина").check_password("secret12"))
+
+    def test_login_and_logout(self):
+        get_user_model().objects.create_user("Ученик", password="secret12")
+        wrong = self.client.post(
+            reverse("login_account"),
+            data=json.dumps({"name": "Ученик", "password": "wrong12"}),
+            content_type="application/json",
+        )
+        correct = self.client.post(
+            reverse("login_account"),
+            data=json.dumps({"name": "ученик", "password": "secret12"}),
+            content_type="application/json",
+        )
+        logged_out = self.client.post(reverse("logout_account"))
+
+        self.assertEqual(wrong.status_code, 401)
+        self.assertEqual(correct.status_code, 200)
+        self.assertTrue(correct.json()["learnerId"].startswith("student-"))
+        self.assertEqual(logged_out.status_code, 200)
+        self.assertNotIn("_auth_user_id", self.client.session)
 
     @override_settings(
         GEOLOGY_API_URL="https://mcp.example.test",
         GEOLOGY_FORM_URL="https://mcp.example.test",
     )
     def test_index_exposes_remote_mcp_service_urls(self):
+        user = get_user_model().objects.create_user("Мила", password="secret12")
+        self.client.force_login(user)
         response = self.client.get(reverse("index"))
 
         self.assertContains(response, 'data-api-url="https://mcp.example.test"')

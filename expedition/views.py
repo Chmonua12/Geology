@@ -2,7 +2,11 @@ import json
 import logging
 import os
 
+from django.contrib.auth import authenticate, get_user_model, login, logout
 from django.conf import settings
+from django.contrib.auth.hashers import make_password
+from django.db import IntegrityError
+from django.utils.crypto import salted_hmac
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.views.decorators.csrf import ensure_csrf_cookie
@@ -16,6 +20,14 @@ OUT_OF_SCOPE_REPLY = (
 logger = logging.getLogger(__name__)
 
 
+def learner_id_for_user(user):
+    digest = salted_hmac(
+        "expedition.learner-id",
+        f"{user.pk}:{user.username}",
+    ).hexdigest()[:12]
+    return f"student-{digest}"
+
+
 @ensure_csrf_cookie
 def index(request):
     return render(
@@ -24,8 +36,90 @@ def index(request):
         {
             "geology_api_url": settings.GEOLOGY_API_URL,
             "geology_form_url": settings.GEOLOGY_FORM_URL,
+            "learner_id": (
+                learner_id_for_user(request.user)
+                if request.user.is_authenticated
+                else ""
+            ),
         },
     )
+
+
+def _read_auth_payload(request):
+    try:
+        payload = json.loads(request.body.decode("utf-8"))
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return None, JsonResponse({"error": "Некорректные данные."}, status=400)
+
+    name = " ".join(str(payload.get("name", "")).split())
+    password = str(payload.get("password", ""))
+    if not 2 <= len(name) <= 40:
+        return None, JsonResponse({"error": "Введите имя."}, status=400)
+    if not 6 <= len(password) <= 128:
+        return None, JsonResponse({"error": "Пароль должен содержать минимум 6 символов."}, status=400)
+    return (name, password), None
+
+
+def _find_user_by_name(name):
+    folded_name = name.casefold()
+    return next(
+        (
+            user
+            for user in get_user_model().objects.only("username")
+            if user.username.casefold() == folded_name
+        ),
+        None,
+    )
+
+
+@require_POST
+def register_account(request):
+    credentials, error_response = _read_auth_payload(request)
+    if error_response:
+        return error_response
+    name, password = credentials
+    User = get_user_model()
+    if _find_user_by_name(name):
+        return JsonResponse({"error": "Это имя уже занято."}, status=409)
+
+    try:
+        user = User.objects.create(
+            username=name,
+            password=make_password(password),
+        )
+    except IntegrityError:
+        return JsonResponse({"error": "Это имя уже занято."}, status=409)
+
+    login(request, user)
+    return JsonResponse(
+        {"ok": True, "learnerId": learner_id_for_user(user)},
+        status=201,
+    )
+
+
+@require_POST
+def login_account(request):
+    credentials, error_response = _read_auth_payload(request)
+    if error_response:
+        return error_response
+    name, password = credentials
+    existing = _find_user_by_name(name)
+    user = authenticate(
+        request,
+        username=existing.username if existing else name,
+        password=password,
+    )
+    if user is None:
+        return JsonResponse({"error": "Неверное имя или пароль."}, status=401)
+
+    login(request, user)
+    return JsonResponse({"ok": True, "learnerId": learner_id_for_user(user)})
+
+
+@require_POST
+def logout_account(request):
+    logout(request)
+    return JsonResponse({"ok": True})
 
 
 @require_POST

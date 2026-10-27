@@ -122,13 +122,14 @@
     return items;
   }
 
-    function create({ onResult = () => {} } = {}) {
+  function create({ onResult = () => {} } = {}) {
     const dialog = document.createElement("dialog");
     dialog.className = "gr-dialog";
     dialog.setAttribute("aria-labelledby", "gr-title");
+    const artworkUrl = window.GEORADAR_ARTWORK_URL || "/static/expedition/georadar-window.png";
     dialog.innerHTML = [
       '<div class="gr-artboard">',
-      '<img class="gr-artwork" src="/static/expedition/georadar-window.png" alt="" aria-hidden="true" draggable="false">',
+      `<img class="gr-artwork" src="${artworkUrl}" alt="" aria-hidden="true" draggable="false">`,
       '<button type="button" class="gr-close" aria-label="Закрыть окно">×</button>',
       '<section class="gr-panel">',
       '<h2 id="gr-title" class="gr-question"></h2>',
@@ -140,15 +141,21 @@
     document.body.append(dialog);
 
     const el = selector => dialog.querySelector(selector);
+    const artboard = el(".gr-artboard");
+    const artwork = el(".gr-artwork");
     const closeButton = el(".gr-close");
     const nextButton = el(".gr-next");
     const feedback = el(".gr-feedback");
     const answersNode = el(".gr-answers");
     const errorCounts = new Map();
-    const successStreak = new Map();
     const triggered = new Set();
     let game = null;
     let lastFocus = null;
+
+    artwork.addEventListener("error", () => {
+      artwork.hidden = true;
+      artboard.classList.add("is-artwork-missing");
+    });
 
     function finish(completed) {
       if (!game || game.reported) return;
@@ -266,17 +273,13 @@
 
     function recordError(topic) {
       if (!missions[topic]) return;
-      successStreak.set(topic, 0);
       const errors = (errorCounts.get(topic) || 0) + 1;
       errorCounts.set(topic, errors);
       if (errors >= 1) queue(topic, "support");
     }
-    function recordSuccess(topic) {
-      if (!missions[topic]) return;
-      const successes = (successStreak.get(topic) || 0) + 1;
-      successStreak.set(topic, successes);
-      if (successes >= 3) queue(topic, "challenge");
-    }
+    // Правильное прохождение не должно прерываться дополнительным окном.
+    // Метод сохранён в API виджета, потому что основная игра сообщает об успехах.
+    function recordSuccess() {}
 
     closeButton.addEventListener("click", close);
     nextButton.addEventListener("click", step);

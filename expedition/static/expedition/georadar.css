@@ -32,6 +32,38 @@
   pointer-events: none;
   user-select: none;
 }
+.gr-artboard.is-artwork-missing {
+  overflow: hidden;
+  border: clamp(6px, .8vw, 10px) solid #0b8c61;
+  border-radius: clamp(24px, 3vw, 42px);
+  background:
+    radial-gradient(circle at 12% 8%, rgba(89, 239, 139, .32), transparent 24%),
+    radial-gradient(circle at 91% 88%, rgba(52, 218, 118, .25), transparent 25%),
+    #006044;
+}
+.gr-artboard.is-artwork-missing::before {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  inset: 17% 8% 12%;
+  border-radius: 28px;
+  background: #fffdf5;
+  box-shadow: 0 0 0 3px rgba(1, 55, 39, .35), 0 16px 34px rgba(0, 25, 17, .2);
+}
+.gr-artboard.is-artwork-missing .gr-panel {
+  inset: 22% 12% 16%;
+}
+.gr-artboard.is-artwork-missing .gr-close {
+  top: 3.5%;
+  right: 3.5%;
+  width: clamp(48px, 6vw, 68px);
+  border: 3px solid #073e31;
+  background: #fffdf5;
+  color: #073e31;
+  font-size: clamp(29px, 4vw, 42px);
+  line-height: 1;
+  box-shadow: 0 4px 0 rgba(1, 46, 33, .45);
+}
 .gr-close {
   position: absolute;
   z-index: 5;
@@ -225,6 +257,12 @@
     inset: 0;
     object-fit: cover;
     object-position: center;
+  }
+  .gr-artboard.is-artwork-missing::before {
+    display: none;
+  }
+  .gr-artboard.is-artwork-missing .gr-panel {
+    inset: 132px 28px 34px;
   }
   .gr-artboard::after {
     content: "";

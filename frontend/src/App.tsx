@@ -32,7 +32,8 @@ type PersonalRoute = {
   createdAt: string;
 };
 
-const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:3001";
+const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? "http://127.0.0.1:3001" : window.location.origin);
+const SITE_URL = import.meta.env.VITE_SITE_URL || "http://127.0.0.1:8000";
 const topicLabels: Record<Topic, string> = {
   karst: "Карстовые процессы",
   landslide: "Оползни",
@@ -171,7 +172,7 @@ export default function App() {
     <main>
       <header className="hero">
         <nav className="topbar" aria-label="Навигация">
-          <a className="brand" href="http://127.0.0.1:8000/">
+          <a className="brand" href={SITE_URL}>
             <span className="brand-mark" aria-hidden="true">▲</span>
             <span>Геощит Адыгеи</span>
           </a>

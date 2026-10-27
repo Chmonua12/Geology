@@ -1,6 +1,8 @@
 import { expeditionFormSchema, progressSchema } from "./contracts";
 import { getDraft, getLatestRoute, getProgress, saveDraft, saveProgress, saveRoute, saveRadarResult, getRadarResults } from "./database";
 import { buildPersonalRoute } from "./taskBank";
+import { createFinalResults } from "./finalResults";
+import { handleMcpMessage } from "./mcpCore";
 
 type SocketData = { learnerId: string };
 const sockets = new Map<string, Set<ServerWebSocket<SocketData>>>();
@@ -23,7 +25,9 @@ function json(request: Request, value: unknown, status = 200) {
 
 function broadcast(learnerId: string, message: unknown) {
   const payload = JSON.stringify(message);
-  sockets.get(learnerId)?.forEach((socket) => socket.send(payload));
+  const connected = sockets.get(learnerId);
+  connected?.forEach((socket) => socket.send(payload));
+  return connected?.size || 0;
 }
 
 const server = Bun.serve<SocketData>({
@@ -45,7 +49,15 @@ const server = Bun.serve<SocketData>({
     }
 
     if (url.pathname === "/api/health") {
-      return json(request, { ok: true, service: "geology-mcp-api", port });
+      return json(request, { ok: true, service: "geology-mcp-api", port, mcp: "/mcp" });
+    }
+
+    if (url.pathname === "/mcp" && request.method === "POST") {
+      const message = await request.json().catch(() => null);
+      if (!message) return json(request, { error: "Invalid JSON-RPC message" }, 400);
+      const response = await handleMcpMessage(message);
+      if (!response) return new Response(null, { status: 202, headers: corsHeaders(request) });
+      return json(request, response);
     }
 
     const progressMatch = url.pathname.match(/^\/api\/progress\/([^/]+)$/);
@@ -60,6 +72,34 @@ const server = Bun.serve<SocketData>({
       const progress = saveProgress(parsed.data);
       broadcast(progress.learnerId, { type: "progress:update", payload: progress });
       return json(request, { progress }, 201);
+    }
+
+    if (url.pathname === "/api/internal/final-results" && request.method === "POST") {
+      const data = await request.json().catch(() => null) as Record<string, unknown> | null;
+      const learnerId = typeof data?.learnerId === "string" ? data.learnerId.trim() : "";
+      if (learnerId.length < 3 || learnerId.length > 80) {
+        return json(request, { error: "Invalid learnerId" }, 422);
+      }
+
+      const progress = getProgress(learnerId);
+      if (!progress) {
+        return json(request, { error: "Прогресс ученика пока не сохранён." }, 404);
+      }
+      if (progress.completedStages < 4) {
+        return json(request, { error: "Сначала завершите все четыре учебных этапа." }, 409);
+      }
+      if (!sockets.get(learnerId)?.size) {
+        return json(request, { error: "Откройте итоговый экран ученика в браузере." }, 409);
+      }
+
+      try {
+        const result = await createFinalResults(progress);
+        const deliveredTo = broadcast(learnerId, { type: "final-results:fill", payload: result });
+        return json(request, { result, deliveredTo }, 201);
+      } catch (error) {
+        console.error("Final results generation failed:", error instanceof Error ? error.message : error);
+        return json(request, { error: "Не удалось получить итоговый разбор от Polza AI." }, 502);
+      }
     }
 
     if (url.pathname === "/api/radar" && request.method === "POST") {

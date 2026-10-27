@@ -214,7 +214,8 @@ const ACTIVE_SCREEN_KEY = "geoshield-active-screen-index";
 const METRICS_KEY = "geoshield-learning-metrics-v1";
 const LEARNER_ID_KEY = "geoshield-learner-id";
 const FINAL_RESULTS_KEY = "geoshield-final-results-v1";
-const PERSONALIZATION_API_URL = "http://127.0.0.1:3001";
+const PERSONALIZATION_API_URL = (document.body.dataset.apiUrl || "http://127.0.0.1:3001").replace(/\/$/, "");
+const PERSONALIZATION_FORM_URL = (document.body.dataset.formUrl || "http://127.0.0.1:5173").replace(/\/$/, "");
 const COMPLETION_KEYS = [
     "geoshield-lago-complete",
     "geoshield-kamennomostsky-complete",
@@ -337,7 +338,7 @@ restoreExperienceFeedback();
 updateResultSummary();
 restoreFinalResults();
 if (personalExpeditionLink) {
-    personalExpeditionLink.href = `http://127.0.0.1:5173/?learner=${encodeURIComponent(learnerId)}`;
+    personalExpeditionLink.href = `${PERSONALIZATION_FORM_URL}/?learner=${encodeURIComponent(learnerId)}`;
 }
 syncLearningProgress();
 
@@ -524,10 +525,11 @@ function recordMetric(name, amount = 1) {
 }
 
 function connectGeoRadarMcp() {
-    // Локальный MCP-клиент подключается к Bun API; Render-сайт работает и без него.
-    if (window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") return;
     try {
-        const socket = new WebSocket("ws://127.0.0.1:3001/ws?learnerId=" + encodeURIComponent(learnerId));
+        const websocketUrl = PERSONALIZATION_API_URL
+            .replace(/^http:/, "ws:")
+            .replace(/^https:/, "wss:");
+        const socket = new WebSocket(`${websocketUrl}/ws?learnerId=${encodeURIComponent(learnerId)}`);
         socket.addEventListener("message", event => {
             try {
                 const message = JSON.parse(event.data);
@@ -594,8 +596,6 @@ function saveGeoRadarResult(result) {
         localStorage.setItem(storageKey, JSON.stringify(entries.slice(-30)));
     } catch (error) { console.warn("GeoRadar: не удалось сохранить результат", error); }
 
-    // При локальной разработке результаты передаются в Bun/SQLite и доступны MCP.
-    if (window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") return;
     fetch(PERSONALIZATION_API_URL + "/api/radar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -655,7 +655,7 @@ function syncLearningProgress() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
     }).catch(() => {
-        // Основная экспедиция продолжает работать, даже если локальный MCP API не запущен.
+        // Основная экспедиция продолжает работать, даже если MCP API временно недоступен.
     });
 }
 

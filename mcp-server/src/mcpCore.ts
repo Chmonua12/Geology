@@ -1,6 +1,7 @@
 import { expeditionFormSchema } from "./contracts";
 
-const apiUrl = process.env.GEOLOGY_API_URL || "http://127.0.0.1:3001";
+const localApiPort = process.env.PORT || process.env.GEOLOGY_API_PORT || "3001";
+const apiUrl = process.env.GEOLOGY_API_URL || `http://127.0.0.1:${localApiPort}`;
 const formProperties = {
   learnerId: { type: "string", minLength: 3, maxLength: 80, description: "ID ученика из формы сайта" },
   topic: { type: "string", enum: ["karst", "landslide", "rockfall", "protection"] },

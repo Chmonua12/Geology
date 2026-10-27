@@ -1,7 +1,10 @@
 {
   "mcpServers": {
     "geology": {
-      "url": "http://127.0.0.1:3001/mcp"
+      "url": "https://geology-mcp.onrender.com/mcp",
+      "headers": {
+        "Authorization": "Bearer <MCP_AUTH_TOKEN_FROM_RENDER>"
+      }
     }
   }
 }

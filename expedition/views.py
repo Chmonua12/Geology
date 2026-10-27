@@ -18,7 +18,14 @@ logger = logging.getLogger(__name__)
 
 @ensure_csrf_cookie
 def index(request):
-    return render(request, "expedition/index.html")
+    return render(
+        request,
+        "expedition/index.html",
+        {
+            "geology_api_url": settings.GEOLOGY_API_URL,
+            "geology_form_url": settings.GEOLOGY_FORM_URL,
+        },
+    )
 
 
 @require_POST

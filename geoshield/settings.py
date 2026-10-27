@@ -71,3 +71,17 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+DEFAULT_GEOLOGY_SERVICE_URL = (
+    "https://geology-mcp.onrender.com"
+    if os.environ.get("RENDER")
+    else "http://127.0.0.1:3001"
+)
+GEOLOGY_API_URL = os.environ.get(
+    "GEOLOGY_API_URL",
+    DEFAULT_GEOLOGY_SERVICE_URL,
+).rstrip("/")
+GEOLOGY_FORM_URL = os.environ.get(
+    "GEOLOGY_FORM_URL",
+    DEFAULT_GEOLOGY_SERVICE_URL if os.environ.get("RENDER") else "http://127.0.0.1:5173",
+).rstrip("/")

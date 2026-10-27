@@ -3,20 +3,53 @@ import { getDraft, getLatestRoute, getProgress, saveDraft, saveProgress, saveRou
 import { buildPersonalRoute } from "./taskBank";
 import { createFinalResults } from "./finalResults";
 import { handleMcpMessage } from "./mcpCore";
+import { resolve } from "node:path";
 
 type SocketData = { learnerId: string };
 const sockets = new Map<string, Set<ServerWebSocket<SocketData>>>();
-const port = Number(process.env.GEOLOGY_API_PORT || 3001);
+const port = Number(process.env.PORT || process.env.GEOLOGY_API_PORT || 3001);
+const hostname = process.env.RENDER ? "0.0.0.0" : "127.0.0.1";
+const frontendRoot = resolve(import.meta.dir, "../../frontend/dist");
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || "http://127.0.0.1:8000,http://127.0.0.1:5173,http://localhost:8000,http://localhost:5173")
+  .split(",")
+  .map((origin) => origin.trim().replace(/\/$/, ""))
+  .filter(Boolean);
 
 function corsHeaders(request: Request) {
-  const origin = request.headers.get("origin") || "*";
-  const allowed = origin === "null" || /^https?:\/\/(127\.0\.0\.1|localhost)(:\d+)?$/.test(origin);
+  const origin = request.headers.get("origin");
+  const allowed = !origin || origin === "null" || allowedOrigins.includes(origin.replace(/\/$/, ""));
   return {
-    "Access-Control-Allow-Origin": allowed ? origin : "http://127.0.0.1:5173",
-    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Allow-Origin": allowed ? (origin || "*") : "null",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization, MCP-Protocol-Version, MCP-Session-Id",
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Expose-Headers": "MCP-Session-Id",
     "Vary": "Origin",
   };
+}
+
+function hasMcpAccess(request: Request) {
+  const token = process.env.MCP_AUTH_TOKEN?.trim();
+  if (!token) return true;
+  return request.headers.get("authorization") === `Bearer ${token}`;
+}
+
+async function serveFrontend(pathname: string) {
+  const relativePath = pathname === "/" ? "index.html" : pathname.slice(1);
+  const candidate = resolve(frontendRoot, relativePath);
+  if (!candidate.startsWith(frontendRoot)) return null;
+
+  const candidateFile = Bun.file(candidate);
+  const file = await candidateFile.exists()
+    ? candidateFile
+    : Bun.file(resolve(frontendRoot, "index.html"));
+  if (!await file.exists()) return null;
+
+  const isAsset = pathname.startsWith("/assets/");
+  return new Response(file, {
+    headers: {
+      "Cache-Control": isAsset ? "public, max-age=31536000, immutable" : "no-cache",
+    },
+  });
 }
 
 function json(request: Request, value: unknown, status = 200) {
@@ -31,7 +64,7 @@ function broadcast(learnerId: string, message: unknown) {
 }
 
 const server = Bun.serve<SocketData>({
-  hostname: "127.0.0.1",
+  hostname,
   port,
   async fetch(request, server) {
     const url = new URL(request.url);
@@ -53,6 +86,9 @@ const server = Bun.serve<SocketData>({
     }
 
     if (url.pathname === "/mcp" && request.method === "POST") {
+      if (!hasMcpAccess(request)) {
+        return json(request, { error: "Unauthorized" }, 401);
+      }
       const message = await request.json().catch(() => null);
       if (!message) return json(request, { error: "Invalid JSON-RPC message" }, 400);
       const response = await handleMcpMessage(message);
@@ -159,7 +195,12 @@ const server = Bun.serve<SocketData>({
       return json(request, { route: getLatestRoute(learnerId) });
     }
 
-    return json(request, { error: "Not found" }, 404);
+    if (url.pathname.startsWith("/api/") || url.pathname === "/mcp" || url.pathname === "/ws") {
+      return json(request, { error: "Not found" }, 404);
+    }
+
+    const frontendResponse = await serveFrontend(url.pathname);
+    return frontendResponse || json(request, { error: "Frontend is not built" }, 503);
   },
   websocket: {
     open(socket) {
@@ -177,4 +218,4 @@ const server = Bun.serve<SocketData>({
   },
 });
 
-console.error(`Geology API listening on ${server.url}`);
+console.error(`Geology API and MCP listening on ${server.url}`);
